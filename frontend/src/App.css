@@ -64,12 +64,12 @@ html, body, #root {
   gap: 8px;
 }
 
-.framely-render-btn {
+.framely-render-btn,
+.framely-share-btn {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 7px 16px;
-  background: linear-gradient(135deg, #6366f1, #7c3aed);
   color: white;
   border: none;
   border-radius: 8px;
@@ -79,12 +79,23 @@ html, body, #root {
   transition: all 0.15s ease;
 }
 
-.framely-render-btn:hover:not(:disabled) {
+.framely-render-btn {
+  background: linear-gradient(135deg, #6366f1, #7c3aed);
+}
+
+.framely-share-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.framely-render-btn:hover:not(:disabled),
+.framely-share-btn:hover:not(:disabled) {
   filter: brightness(1.1);
   transform: translateY(-1px);
 }
 
-.framely-render-btn:disabled {
+.framely-render-btn:disabled,
+.framely-share-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
@@ -102,16 +113,16 @@ html, body, #root {
   to { transform: rotate(360deg); }
 }
 
-/* ─── Body ─── */
+/* ─── Body: 3-panel layout ─── */
 .framely-editor-body {
   display: flex;
   flex: 1;
   overflow: hidden;
 }
 
-/* ─── Sidebar ─── */
+/* ─── Left Sidebar (compositions) ─── */
 .framely-sidebar {
-  width: 280px;
+  width: 260px;
   background: #111113;
   border-right: 1px solid rgba(255, 255, 255, 0.06);
   overflow-y: auto;
@@ -179,31 +190,42 @@ html, body, #root {
   margin-top: 2px;
 }
 
-/* ─── Render Status ─── */
-.framely-render-status {
+/* ─── Center area (player + timeline) ─── */
+.framely-center {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-}
-
-.framely-progress-bar {
-  height: 4px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 2px;
   overflow: hidden;
+  min-width: 0;
 }
 
-.framely-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #6366f1, #818cf8);
-  border-radius: 2px;
-  transition: width 0.3s ease;
+.framely-main {
+  flex: 1;
+  display: flex;
+  padding: 16px;
+  overflow: hidden;
+  min-height: 0;
 }
 
-.framely-render-status-text {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.4);
-  font-family: 'SF Mono', 'Fira Code', monospace;
+.framely-main .framely-player {
+  flex: 1;
+}
+
+/* ─── Timeline panel ─── */
+.framely-timeline-panel {
+  flex-shrink: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ─── Right Sidebar (props editor) ─── */
+.framely-right-panel {
+  width: 280px;
+  background: #111113;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  overflow-y: auto;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ─── Shortcuts ─── */
@@ -234,16 +256,4 @@ html, body, #root {
   font-family: 'SF Mono', 'Fira Code', monospace;
   font-size: 10px;
   color: rgba(255, 255, 255, 0.5);
-}
-
-/* ─── Main Player Area ─── */
-.framely-main {
-  flex: 1;
-  display: flex;
-  padding: 16px;
-  overflow: hidden;
-}
-
-.framely-main .framely-player {
-  flex: 1;
 }

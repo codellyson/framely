@@ -5,8 +5,17 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
-    // Allow the backend renderer to access the dev server
     cors: true,
     host: '0.0.0.0',
+    proxy: {
+      '/api': {
+        target: `http://localhost:${process.env.VITE_RENDER_API_PORT || 3001}`,
+        changeOrigin: true,
+      },
+      '/outputs': {
+        target: `http://localhost:${process.env.VITE_RENDER_API_PORT || 3001}`,
+        changeOrigin: true,
+      },
+    },
   },
 });

@@ -23,7 +23,7 @@ export function Player({
       height={compositionHeight}
       durationInFrames={durationInFrames}
     >
-      <PlayerInner
+      <PlayerView
         component={Component}
         compositionWidth={compositionWidth}
         compositionHeight={compositionHeight}
@@ -35,7 +35,7 @@ export function Player({
   );
 }
 
-function PlayerInner({
+export function PlayerView({
   component: Component,
   compositionWidth,
   compositionHeight,

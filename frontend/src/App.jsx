@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Player } from './player/Player';
-import { TimelineProvider } from './lib';
+import { PlayerView } from './player/Player';
+import { TimelineProvider, useTimeline } from './lib';
+import { Timeline } from './studio/Timeline';
+import { PropsEditor } from './studio/PropsEditor';
+import { RenderDialog } from './studio/RenderDialog';
+import { ShareDialog } from './studio/ShareDialog';
 import SampleVideo from './compositions/SampleVideo';
 import TransitionsTest from './compositions/TransitionsTest';
 import LoopTest from './compositions/LoopTest';
@@ -19,6 +23,11 @@ const compositions = {
     fps: 30,
     durationInFrames: 300,
     defaultProps: {},
+    sequences: [
+      { name: 'Intro', from: 0, durationInFrames: 90 },
+      { name: 'Main Content', from: 90, durationInFrames: 120 },
+      { name: 'Outro', from: 210, durationInFrames: 90 },
+    ],
   },
   'transitions-test': {
     id: 'transitions-test',
@@ -28,6 +37,12 @@ const compositions = {
     fps: 30,
     durationInFrames: 280,
     defaultProps: {},
+    sequences: [
+      { name: 'Fade', from: 0, durationInFrames: 70 },
+      { name: 'Slide', from: 70, durationInFrames: 70 },
+      { name: 'Wipe', from: 140, durationInFrames: 70 },
+      { name: 'Clock Wipe', from: 210, durationInFrames: 70 },
+    ],
   },
   'loop-test': {
     id: 'loop-test',
@@ -37,6 +52,9 @@ const compositions = {
     fps: 30,
     durationInFrames: 300,
     defaultProps: {},
+    sequences: [
+      { name: 'Loop Cycle', from: 0, durationInFrames: 300 },
+    ],
   },
   'series-test': {
     id: 'series-test',
@@ -46,6 +64,11 @@ const compositions = {
     fps: 30,
     durationInFrames: 210,
     defaultProps: {},
+    sequences: [
+      { name: 'Part 1', from: 0, durationInFrames: 70 },
+      { name: 'Part 2', from: 70, durationInFrames: 70 },
+      { name: 'Part 3', from: 140, durationInFrames: 70 },
+    ],
   },
   'animations-test': {
     id: 'animations-test',
@@ -55,6 +78,9 @@ const compositions = {
     fps: 30,
     durationInFrames: 120,
     defaultProps: {},
+    sequences: [
+      { name: 'Animations', from: 0, durationInFrames: 120 },
+    ],
   },
   'color-test': {
     id: 'color-test',
@@ -64,6 +90,9 @@ const compositions = {
     fps: 30,
     durationInFrames: 150,
     defaultProps: {},
+    sequences: [
+      { name: 'Color Interpolation', from: 0, durationInFrames: 150 },
+    ],
   },
 };
 
@@ -119,53 +148,20 @@ function RenderView({ composition }) {
 }
 
 /**
- * Editor mode — player with controls and composition list.
+ * Editor mode — 3-panel layout with player, timeline, and props editor.
  */
 function EditorView({ composition, compositions }) {
   const [activeId, setActiveId] = useState(composition.id);
-  const [isRendering, setIsRendering] = useState(false);
-  const [renderProgress, setRenderProgress] = useState(0);
-  const [renderStatus, setRenderStatus] = useState('');
+  const [renderDialogOpen, setRenderDialogOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
   const activeComp = compositions[activeId];
+  const [inputProps, setInputProps] = useState(activeComp.defaultProps || {});
 
-  const handleRender = async () => {
-    setIsRendering(true);
-    setRenderProgress(0);
-    setRenderStatus('Starting render...');
-
-    try {
-      const res = await fetch('http://localhost:4000/api/render', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          compositionId: activeId,
-          width: activeComp.width,
-          height: activeComp.height,
-          fps: activeComp.fps,
-          durationInFrames: activeComp.durationInFrames,
-        }),
-      });
-
-      if (!res.ok) {
-        throw new Error(`Render failed: ${res.statusText}`);
-      }
-
-      // Stream progress from SSE or just get the result
-      const data = await res.json();
-      setRenderStatus(`Done! Output: ${data.outputPath}`);
-      setRenderProgress(100);
-
-      // Download the video
-      if (data.downloadUrl) {
-        window.open(data.downloadUrl, '_blank');
-      }
-    } catch (err) {
-      setRenderStatus(`Error: ${err.message}`);
-    } finally {
-      setIsRendering(false);
-    }
-  };
+  // Reset props when switching compositions
+  useEffect(() => {
+    setInputProps(compositions[activeId]?.defaultProps || {});
+  }, [activeId]);
 
   return (
     <div className="framely-editor">
@@ -177,29 +173,28 @@ function EditorView({ composition, compositions }) {
         </div>
         <div className="framely-header-actions">
           <button
-            className="framely-render-btn"
-            onClick={handleRender}
-            disabled={isRendering}
+            className="framely-share-btn"
+            onClick={() => setShareDialogOpen(true)}
           >
-            {isRendering ? (
-              <>
-                <span className="framely-spinner" />
-                Rendering...
-              </>
-            ) : (
-              <>
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M8 1v6h6M8 1L2 7l6 6V7" />
-                </svg>
-                Render Video
-              </>
-            )}
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M13 5a2 2 0 100-4 2 2 0 000 4zM3 10a2 2 0 100-4 2 2 0 000 4zM13 15a2 2 0 100-4 2 2 0 000 4zM5.3 9.1l5.4 3.3M10.7 3.6L5.3 6.9" stroke="currentColor" strokeWidth="1.5" fill="none" />
+            </svg>
+            Share
+          </button>
+          <button
+            className="framely-render-btn"
+            onClick={() => setRenderDialogOpen(true)}
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 1v6h6M8 1L2 7l6 6V7" />
+            </svg>
+            Render
           </button>
         </div>
       </header>
 
       <div className="framely-editor-body">
-        {/* Sidebar */}
+        {/* Left Sidebar — Compositions */}
         <aside className="framely-sidebar">
           <div className="framely-sidebar-section">
             <div className="framely-sidebar-label">Compositions</div>
@@ -219,24 +214,6 @@ function EditorView({ composition, compositions }) {
               </button>
             ))}
           </div>
-
-          {/* Render status */}
-          {renderStatus && (
-            <div className="framely-sidebar-section">
-              <div className="framely-sidebar-label">Render Status</div>
-              <div className="framely-render-status">
-                {isRendering && (
-                  <div className="framely-progress-bar">
-                    <div
-                      className="framely-progress-fill"
-                      style={{ width: `${renderProgress}%` }}
-                    />
-                  </div>
-                )}
-                <div className="framely-render-status-text">{renderStatus}</div>
-              </div>
-            </div>
-          )}
 
           {/* Keyboard shortcuts */}
           <div className="framely-sidebar-section">
@@ -258,19 +235,77 @@ function EditorView({ composition, compositions }) {
           </div>
         </aside>
 
-        {/* Main area: Player */}
-        <main className="framely-main">
-          <Player
-            component={activeComp.component}
-            compositionWidth={activeComp.width}
-            compositionHeight={activeComp.height}
+        {/* Center — Player + Timeline (shared TimelineProvider) */}
+        <div className="framely-center">
+          <TimelineProvider
             fps={activeComp.fps}
+            width={activeComp.width}
+            height={activeComp.height}
             durationInFrames={activeComp.durationInFrames}
-            inputProps={activeComp.defaultProps}
+          >
+            <main className="framely-main">
+              <PlayerView
+                component={activeComp.component}
+                compositionWidth={activeComp.width}
+                compositionHeight={activeComp.height}
+                inputProps={inputProps}
+              />
+            </main>
+            <div className="framely-timeline-panel">
+              <TimelineConnector
+                activeComp={activeComp}
+              />
+            </div>
+          </TimelineProvider>
+        </div>
+
+        {/* Right Panel — Props Editor */}
+        <aside className="framely-right-panel">
+          <PropsEditor
+            props={inputProps}
+            defaultProps={activeComp.defaultProps || {}}
+            onChange={setInputProps}
           />
-        </main>
+        </aside>
       </div>
+
+      {/* Render Dialog */}
+      <RenderDialog
+        open={renderDialogOpen}
+        onClose={() => setRenderDialogOpen(false)}
+        composition={activeComp}
+        inputProps={inputProps}
+      />
+
+      {/* Share Dialog */}
+      <ShareDialog
+        open={shareDialogOpen}
+        onClose={() => setShareDialogOpen(false)}
+        composition={activeComp}
+        inputProps={inputProps}
+      />
     </div>
+  );
+}
+
+/**
+ * Bridge between TimelineProvider context and the Timeline component.
+ * This reads from the shared context so both PlayerView and Timeline stay in sync.
+ */
+function TimelineConnector({ activeComp }) {
+  const { frame, durationInFrames, fps, playing, setFrame, play, pause } = useTimeline();
+
+  return (
+    <Timeline
+      frame={frame}
+      durationInFrames={durationInFrames}
+      fps={fps}
+      sequences={activeComp.sequences || []}
+      onSeek={setFrame}
+      playing={playing}
+      onPlay={play}
+      onPause={pause}
+    />
   );
 }
 

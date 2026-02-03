@@ -36,8 +36,7 @@ const QUALITY_PRESETS = [
  * @param {function} props.onClose - Called to close dialog
  * @param {object} props.composition - Current composition config
  * @param {object} props.inputProps - Current input props
- * @param {function} props.onRender - Called to start render
- * @param {string} [props.renderApiUrl='http://localhost:4000'] - Render API URL
+ * @param {function} [props.onRender] - Called when render completes
  */
 export function RenderDialog({
   open,
@@ -45,7 +44,6 @@ export function RenderDialog({
   composition,
   inputProps = {},
   onRender,
-  renderApiUrl = 'http://localhost:4000',
 }) {
   // Render settings
   const [codec, setCodec] = useState('h264');
@@ -61,6 +59,7 @@ export function RenderDialog({
   // Render state
   const [rendering, setRendering] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [statusMessage, setStatusMessage] = useState('');
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
 
@@ -74,7 +73,8 @@ export function RenderDialog({
   // Get CRF based on quality preset or custom
   const getCrf = () => {
     if (quality === 'custom') return customCrf;
-    return QUALITY_PRESETS.find((p) => p.id === quality)?.crf ?? 18;
+    const preset = QUALITY_PRESETS.find((p) => p.id === quality);
+    return preset ? preset.crf : 18;
   };
 
   // Calculate output dimensions
@@ -85,17 +85,18 @@ export function RenderDialog({
   const frameCount = endFrame - startFrame + 1;
   const duration = frameCount / (composition?.fps || 30);
 
-  // Start render
+  // Start render with NDJSON streaming
   const handleRender = useCallback(async () => {
     if (!composition) return;
 
     setRendering(true);
     setProgress(0);
+    setStatusMessage('Starting render...');
     setError(null);
     setResult(null);
 
     try {
-      const response = await fetch(`${renderApiUrl}/api/render`, {
+      const response = await fetch('/api/render', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -111,28 +112,56 @@ export function RenderDialog({
           scale,
           inputProps,
           muted,
-          parallel,
-          concurrency,
         }),
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Render failed');
+        throw new Error('Render request failed: ' + response.statusText);
       }
 
-      const data = await response.json();
-      setResult(data);
-      setProgress(100);
-      onRender?.(data);
+      // Read NDJSON stream
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // Keep incomplete line in buffer
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const event = JSON.parse(line);
+            if (event.type === 'progress') {
+              setProgress(event.percent);
+              setStatusMessage(`Frame ${event.frame}/${event.total}`);
+            } else if (event.type === 'status') {
+              setStatusMessage(event.message);
+            } else if (event.type === 'complete') {
+              setProgress(100);
+              setResult(event);
+              if (onRender) onRender(event);
+            } else if (event.type === 'error') {
+              throw new Error(event.message);
+            }
+          } catch (parseErr) {
+            if (parseErr.message !== 'Invalid JSON') throw parseErr;
+          }
+        }
+      }
     } catch (err) {
       setError(err.message);
     } finally {
       setRendering(false);
+      setStatusMessage('');
     }
   }, [
-    composition, renderApiUrl, codec, quality, customCrf, scale,
-    startFrame, endFrame, muted, parallel, concurrency, inputProps, onRender,
+    composition, codec, quality, customCrf, scale,
+    startFrame, endFrame, muted, inputProps, onRender,
   ]);
 
   if (!open) return null;
@@ -436,7 +465,7 @@ export function RenderDialog({
                 />
               </div>
               <div style={{ color: '#888', fontSize: '12px', textAlign: 'center', marginTop: '4px' }}>
-                Rendering... {progress}%
+                {statusMessage || `Rendering... ${progress}%`}
               </div>
             </div>
           )}
