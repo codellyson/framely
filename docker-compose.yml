@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  # ─── Rendering Backend ───
+  # Runs Playwright + FFmpeg in a container
+  renderer:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      # Connects to the Vite dev server running on the host
+      - FRONTEND_URL=http://host.docker.internal:3000
+    volumes:
+      # Mount outputs directory so rendered videos are accessible on host
+      - ./outputs:/app/outputs
+    # Enable host.docker.internal on Linux
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
