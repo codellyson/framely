@@ -4,3 +4,6 @@ outputs/
 .env
 *.mp4
 *.webm
+*.mov
+*.gif
+pnpm-debug.log*

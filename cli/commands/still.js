@@ -13,20 +13,13 @@ import fs from 'fs';
 import chalk from 'chalk';
 import ora from 'ora';
 import { createBrowser, closeBrowser, setFrame } from '../utils/browser.js';
-
-/**
- * Load props from JSON string or file.
- */
-function loadProps(propsJson, propsFile) {
-  if (propsFile) {
-    const content = fs.readFileSync(propsFile, 'utf-8');
-    return JSON.parse(content);
-  }
-  if (propsJson) {
-    return JSON.parse(propsJson);
-  }
-  return {};
-}
+import { loadProps } from '../utils/props.js';
+import {
+  validateScale,
+  validateQuality,
+  validateFrontendUrl,
+  validateDimension,
+} from '../utils/validate.js';
 
 /**
  * Main still command handler.
@@ -37,9 +30,12 @@ export async function stillCommand(compositionId, output, options) {
   try {
     const frame = parseInt(options.frame, 10);
     const format = options.format || 'png';
-    const quality = parseInt(options.quality, 10);
-    const scale = parseFloat(options.scale);
+    const quality = validateQuality(parseInt(options.quality, 10));
+    const scale = validateScale(parseFloat(options.scale));
     const inputProps = loadProps(options.props, options.propsFile);
+    validateFrontendUrl(options.frontendUrl, options.allowRemote);
+    if (options.width) validateDimension(options.width, 'width');
+    if (options.height) validateDimension(options.height, 'height');
 
     // Validate format
     if (!['png', 'jpeg', 'jpg'].includes(format)) {

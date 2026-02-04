@@ -14,8 +14,18 @@ import fs from 'fs';
 import chalk from 'chalk';
 import ora from 'ora';
 import { createBrowser, closeBrowser } from '../utils/browser.js';
-import { renderVideo, renderSequence } from '../utils/render.js';
+import { renderVideo, renderVideoParallel, renderSequence, renderGif, mixAudio } from '../utils/render.js';
 import { getCodecConfig } from '../utils/codecs.js';
+import { loadProps } from '../utils/props.js';
+import { createLogger } from '../utils/logger.js';
+import {
+  validateCrf,
+  validateScale,
+  validateFps,
+  validateDimension,
+  validateQuality,
+  validateFrontendUrl,
+} from '../utils/validate.js';
 
 /**
  * Parse frame range string to { start, end }.
@@ -30,27 +40,11 @@ function parseFrameRange(range) {
 }
 
 /**
- * Load props from JSON string or file.
- * @param {string} propsJson - JSON string
- * @param {string} propsFile - Path to JSON file
- * @returns {object}
- */
-function loadProps(propsJson, propsFile) {
-  if (propsFile) {
-    const content = fs.readFileSync(propsFile, 'utf-8');
-    return JSON.parse(content);
-  }
-  if (propsJson) {
-    return JSON.parse(propsJson);
-  }
-  return {};
-}
-
-/**
  * Main render command handler.
  */
 export async function renderCommand(compositionId, output, options) {
   const spinner = ora();
+  const log = createLogger(options.logLevel);
 
   try {
     // ─── Parse Options ───
@@ -63,11 +57,16 @@ export async function renderCommand(compositionId, output, options) {
       process.exit(1);
     }
 
-    const crf = parseInt(options.crf, 10);
+    const crf = validateCrf(parseInt(options.crf, 10), codec);
     const concurrency = parseInt(options.concurrency, 10);
-    const scale = parseFloat(options.scale);
+    const scale = validateScale(parseFloat(options.scale));
     const frameRange = parseFrameRange(options.frames);
     const inputProps = loadProps(options.props, options.propsFile);
+    validateFrontendUrl(options.frontendUrl, options.allowRemote);
+    if (options.fps) validateFps(options.fps);
+    if (options.width) validateDimension(options.width, 'width');
+    if (options.height) validateDimension(options.height, 'height');
+    if (options.quality) validateQuality(options.quality);
 
     // ─── Determine Output Path ───
     const outputDir = path.resolve(options.outputDir);
@@ -87,7 +86,9 @@ export async function renderCommand(compositionId, output, options) {
     console.log(chalk.cyan('\n🎬 Framely Render\n'));
     console.log(chalk.white('  Composition:'), chalk.yellow(compositionId));
     console.log(chalk.white('  Codec:      '), chalk.yellow(codec));
-    console.log(chalk.white('  Quality:    '), chalk.yellow(`CRF ${crf}`));
+    if (codecConfig.supportsCrf) {
+      console.log(chalk.white('  Quality:    '), chalk.yellow(`CRF ${crf}`));
+    }
     if (options.width || options.height) {
       console.log(chalk.white('  Resolution: '), chalk.yellow(`${options.width || 'auto'}x${options.height || 'auto'}`));
     }
@@ -96,6 +97,9 @@ export async function renderCommand(compositionId, output, options) {
     }
     if (frameRange) {
       console.log(chalk.white('  Frames:     '), chalk.yellow(`${frameRange.start}-${frameRange.end}`));
+    }
+    if (concurrency > 1 && !options.sequence && codec !== 'gif') {
+      console.log(chalk.white('  Concurrency:'), chalk.yellow(`${concurrency} workers`));
     }
     if (Object.keys(inputProps).length > 0) {
       console.log(chalk.white('  Props:      '), chalk.gray(JSON.stringify(inputProps)));
@@ -142,6 +146,12 @@ export async function renderCommand(compositionId, output, options) {
       endFrame = Math.min(frameRange.end, metadata.durationInFrames - 1);
     }
 
+    if (startFrame > endFrame) {
+      console.error(chalk.red(`\nError: Start frame (${startFrame}) must be <= end frame (${endFrame})\n`));
+      await closeBrowser(browser);
+      process.exit(1);
+    }
+
     const totalFrames = endFrame - startFrame + 1;
 
     console.log(chalk.gray(`\n  Rendering ${totalFrames} frames (${startFrame}-${endFrame})\n`));
@@ -173,8 +183,39 @@ export async function renderCommand(compositionId, output, options) {
         quality: parseInt(options.quality, 10),
         onProgress,
       });
+    } else if (codec === 'gif') {
+      // GIF uses 2-pass palette rendering for better quality
+      log.verbose('Using 2-pass GIF rendering with palette generation');
+      await renderGif({
+        page,
+        outputPath,
+        startFrame,
+        endFrame,
+        width,
+        height,
+        fps,
+        onProgress,
+      });
+    } else if (concurrency > 1) {
+      // Parallel rendering with multiple browser instances
+      log.verbose(`Starting parallel render with ${concurrency} workers`);
+      await closeBrowser(browser); // Close the initial browser, parallel uses its own pool
+      await renderVideoParallel({
+        renderUrl,
+        outputPath,
+        startFrame,
+        endFrame,
+        width,
+        height,
+        fps,
+        codec,
+        crf,
+        concurrency,
+        muted: options.muted,
+        onProgress,
+      });
     } else {
-      // Render as video
+      // Single-threaded video render
       await renderVideo({
         page,
         outputPath,
@@ -190,17 +231,41 @@ export async function renderCommand(compositionId, output, options) {
       });
     }
 
+    // ─── Audio Mixing ───
+    if (!options.muted && codec !== 'gif' && !options.sequence) {
+      try {
+        // Check if there are audio tracks registered in the page
+        const audioTracks = concurrency > 1 ? null : await page.evaluate(() => {
+          return window.__FRAMELY_AUDIO_TRACKS || null;
+        });
+
+        if (audioTracks && audioTracks.length > 0) {
+          log.verbose(`Mixing ${audioTracks.length} audio track(s)...`);
+          spinner.start('Mixing audio...');
+          const tempOutput = outputPath.replace(/(\.[^.]+)$/, '-with-audio$1');
+          await mixAudio({ videoPath: outputPath, audioTracks, outputPath: tempOutput, fps });
+          // Replace original with mixed version
+          fs.renameSync(tempOutput, outputPath);
+          spinner.succeed('Audio mixed');
+        }
+      } catch (audioErr) {
+        log.warn(`Warning: Audio mixing failed: ${audioErr.message}`);
+      }
+    }
+
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`\n\n${chalk.green('✓')} Render complete in ${chalk.cyan(duration + 's')}`);
     console.log(chalk.gray(`  Output: ${outputPath}\n`));
 
     // ─── Cleanup ───
-    await closeBrowser(browser);
+    if (concurrency <= 1) {
+      await closeBrowser(browser);
+    }
     process.exit(0);
   } catch (error) {
     spinner.fail('Render failed');
     console.error(chalk.red(`\nError: ${error.message}\n`));
-    if (options.logLevel === 'verbose') {
+    if (log.isVerbose) {
       console.error(error.stack);
     }
     process.exit(1);

@@ -1,0 +1,44 @@
+{
+  "name": "framely",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Programmatic video creation with React",
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @framely/frontend dev",
+    "build": "pnpm --filter @framely/frontend build",
+    "preview": "node cli/index.js preview",
+    "render": "node cli/index.js render",
+    "still": "node cli/index.js still",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint cli/ frontend/src/",
+    "lint:fix": "eslint cli/ frontend/src/ --fix",
+    "format": "prettier --write \"cli/**/*.js\" \"frontend/src/**/*.{js,jsx,css}\""
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@testing-library/jest-dom": "^6.4.0",
+    "@testing-library/react": "^14.2.0",
+    "@types/node": "^25.2.0",
+    "@types/react": "^18.3.27",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.2.1",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.34.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "jsdom": "^24.0.0",
+    "prettier": "^3.2.0",
+    "typescript": "^5.9.3",
+    "vitest": "^2.0.0"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "zod": "^4.3.6"
+  }
+}

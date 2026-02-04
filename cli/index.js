@@ -49,8 +49,11 @@ program
   .option('--image-format <format>', 'Image format for sequence (png, jpeg)', 'png')
   .option('--quality <number>', 'JPEG quality (0-100)', '80')
   .option('--scale <number>', 'Scale factor for output dimensions', '1')
+  .option('--preset <preset>', 'FFmpeg encoding preset (ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow)', 'fast')
+  .option('--timeout <ms>', 'Timeout in ms for delayRender and page readiness', '30000')
   .option('--muted', 'Disable audio in output')
   .option('--frontend-url <url>', 'Frontend URL for rendering', 'http://localhost:3000')
+  .option('--allow-remote', 'Allow rendering from non-localhost URLs')
   .option('--log-level <level>', 'Log level (error, warn, info, verbose)', 'info')
   .action(renderCommand);
 
@@ -68,6 +71,7 @@ program
   .option('--props <json>', 'Input props as JSON string')
   .option('--props-file <path>', 'Path to JSON file with input props')
   .option('--frontend-url <url>', 'Frontend URL for rendering', 'http://localhost:3000')
+  .option('--allow-remote', 'Allow rendering from non-localhost URLs')
   .action(stillCommand);
 
 // ─── Preview Command ──────────────────────────────────────────────────────────

@@ -64,8 +64,9 @@ export async function compositionsCommand(options) {
     // If no compositions found, try the API endpoint
     if (compositions.length === 0) {
       try {
-        const apiUrl = options.frontendUrl.replace(':3000', ':4000');
-        const response = await fetch(`${apiUrl}/api/compositions`);
+        const parsed = new URL(options.frontendUrl);
+        parsed.port = String(parseInt(parsed.port || '3000', 10) + 1);
+        const response = await fetch(`${parsed.origin}/api/compositions`);
         if (response.ok) {
           const data = await response.json();
           compositions.push(...(data.compositions || []));

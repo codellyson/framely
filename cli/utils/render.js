@@ -7,8 +7,15 @@
 import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import { setFrame } from './browser.js';
+import crypto from 'crypto';
+import { setFrame, createBrowser, closeBrowser } from './browser.js';
 import { getCodecArgs, getAudioArgs } from './codecs.js';
+
+/** Selector for the render container element. */
+const RENDER_CONTAINER = '#render-container';
+
+/** Default JPEG quality for frame capture. */
+const DEFAULT_SCREENSHOT_QUALITY = 90;
 
 /**
  * Render a video from a page.
@@ -24,6 +31,7 @@ import { getCodecArgs, getAudioArgs } from './codecs.js';
  * @param {string} options.codec - Codec identifier
  * @param {number} options.crf - Quality (CRF value)
  * @param {boolean} options.muted - Disable audio
+ * @param {number} [options.screenshotQuality] - JPEG quality for frame capture (1-100)
  * @param {function} options.onProgress - Progress callback
  * @returns {Promise<string>} Output path
  */
@@ -38,6 +46,7 @@ export async function renderVideo({
   codec = 'h264',
   crf = 18,
   muted = false,
+  screenshotQuality = DEFAULT_SCREENSHOT_QUALITY,
   onProgress,
 }) {
   const totalFrames = endFrame - startFrame + 1;
@@ -83,8 +92,8 @@ export async function renderVideo({
     await setFrame(page, frame);
 
     // Capture screenshot (JPEG is faster to encode and smaller to pipe)
-    const element = page.locator('#render-container');
-    const screenshot = await element.screenshot({ type: 'jpeg', quality: 90 });
+    const element = page.locator(RENDER_CONTAINER);
+    const screenshot = await element.screenshot({ type: 'jpeg', quality: screenshotQuality });
 
     // Pipe to FFmpeg
     const canWrite = ffmpegProcess.stdin.write(screenshot);
@@ -151,7 +160,7 @@ export async function renderSequence({
     const outputPath = path.join(outputDir, filename);
 
     // Capture screenshot
-    const element = page.locator('#render-container');
+    const element = page.locator(RENDER_CONTAINER);
     const screenshotOptions = {
       type: imageFormat,
       path: outputPath,
@@ -210,7 +219,7 @@ export async function renderGif({
       const frameNum = String(frame - startFrame).padStart(padding, '0');
       const framePath = path.join(tempDir, `frame-${frameNum}.png`);
 
-      const element = page.locator('#render-container');
+      const element = page.locator(RENDER_CONTAINER);
       await element.screenshot({ type: 'png', path: framePath });
 
       if (onProgress) onProgress(frame - startFrame + 1, totalFrames);
@@ -301,6 +310,107 @@ export async function mixAudio({
 }
 
 /**
+ * Render a video using parallel browser instances.
+ *
+ * Divides the frame range into chunks, renders each chunk in a separate
+ * browser instance as a PNG sequence, then stitches them with FFmpeg.
+ *
+ * @param {object} options
+ * @param {string} options.renderUrl - URL to load in each browser
+ * @param {string} options.outputPath - Output file path
+ * @param {number} options.startFrame - First frame
+ * @param {number} options.endFrame - Last frame
+ * @param {number} options.width - Video width
+ * @param {number} options.height - Video height
+ * @param {number} options.fps - Frames per second
+ * @param {string} options.codec - Codec identifier
+ * @param {number} options.crf - Quality
+ * @param {number} options.concurrency - Number of parallel workers
+ * @param {boolean} options.muted - Disable audio
+ * @param {function} options.onProgress - Progress callback
+ * @returns {Promise<string>} Output path
+ */
+export async function renderVideoParallel({
+  renderUrl,
+  outputPath,
+  startFrame,
+  endFrame,
+  width,
+  height,
+  fps,
+  codec = 'h264',
+  crf = 18,
+  concurrency = 2,
+  muted = false,
+  onProgress,
+}) {
+  const totalFrames = endFrame - startFrame + 1;
+  const chunkSize = Math.ceil(totalFrames / concurrency);
+  const tempDir = path.join(path.dirname(outputPath), `.framely-parallel-${crypto.randomUUID().slice(0, 8)}`);
+  fs.mkdirSync(tempDir, { recursive: true });
+
+  // Calculate padding for frame filenames
+  const padding = String(endFrame).length;
+
+  try {
+    // Divide into chunks
+    const chunks = [];
+    for (let i = 0; i < concurrency; i++) {
+      const chunkStart = startFrame + i * chunkSize;
+      const chunkEnd = Math.min(chunkStart + chunkSize - 1, endFrame);
+      if (chunkStart > endFrame) break;
+      chunks.push({ start: chunkStart, end: chunkEnd, index: i });
+    }
+
+    // Track progress across all workers
+    let framesRendered = 0;
+
+    // Render each chunk in parallel
+    await Promise.all(
+      chunks.map(async (chunk) => {
+        const { browser, page } = await createBrowser({ width, height, scale: 1 });
+
+        try {
+          await page.goto(renderUrl, { waitUntil: 'domcontentloaded' });
+          await page.waitForFunction('window.__ready === true', { timeout: 30000 });
+
+          for (let frame = chunk.start; frame <= chunk.end; frame++) {
+            await setFrame(page, frame);
+
+            const frameNum = String(frame).padStart(padding, '0');
+            const framePath = path.join(tempDir, `frame-${frameNum}.png`);
+
+            const element = page.locator(RENDER_CONTAINER);
+            await element.screenshot({ type: 'png', path: framePath });
+
+            framesRendered++;
+            if (onProgress) onProgress(framesRendered, totalFrames);
+          }
+        } finally {
+          await closeBrowser(browser);
+        }
+      })
+    );
+
+    // Stitch frames with FFmpeg
+    const inputPattern = path.join(tempDir, `frame-%0${padding}d.png`);
+    const ffmpegArgs = [
+      '-y',
+      '-framerate', String(fps),
+      '-i', inputPattern,
+      ...getCodecArgs(codec, { crf, fps, width, height }),
+      outputPath,
+    ];
+
+    await runFFmpeg(ffmpegArgs);
+    return outputPath;
+  } finally {
+    // Clean up temp directory
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+}
+
+/**
  * Run FFmpeg command.
  *
  * @param {string[]} args - FFmpeg arguments
@@ -308,24 +418,29 @@ export async function mixAudio({
  */
 function runFFmpeg(args) {
   return new Promise((resolve, reject) => {
-    const process = spawn('ffmpeg', args);
+    const proc = spawn('ffmpeg', args);
 
     let stderr = '';
-    process.stderr.on('data', (data) => {
+    proc.stderr.on('data', (data) => {
       stderr += data.toString();
+      // Cap stderr buffer at 10KB
+      if (stderr.length > 10000) {
+        stderr = stderr.slice(-10000);
+      }
     });
 
-    process.on('close', (code) => {
+    proc.on('close', (code) => {
       if (code === 0) resolve();
-      else reject(new Error(`FFmpeg failed (code ${code}): ${stderr.slice(-500)}`));
+      else reject(new Error(`FFmpeg failed (code ${code}): ${stderr.slice(-2000)}`));
     });
 
-    process.on('error', reject);
+    proc.on('error', reject);
   });
 }
 
 export default {
   renderVideo,
+  renderVideoParallel,
   renderSequence,
   renderGif,
   mixAudio,

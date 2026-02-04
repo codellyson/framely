@@ -48,7 +48,7 @@ function parseBody(req) {
  * @param {string} outputsDir - Directory to store rendered files
  * @returns {http.Server}
  */
-function startRenderApi(apiPort, frontendUrl, outputsDir) {
+function startRenderApi(apiPort, frontendUrl, outputsDir, publicDir) {
   fs.mkdirSync(outputsDir, { recursive: true });
 
   const server = http.createServer((req, res) => {
@@ -72,6 +72,12 @@ function startRenderApi(apiPort, frontendUrl, outputsDir) {
     // POST /api/still — render single frame
     if (req.method === 'POST' && req.url === '/api/still') {
       handleStill(req, res, frontendUrl, outputsDir);
+      return;
+    }
+
+    // GET /api/assets — list project static assets
+    if (req.method === 'GET' && req.url === '/api/assets') {
+      handleListAssets(req, res, publicDir);
       return;
     }
 
@@ -270,18 +276,86 @@ async function handleStill(req, res, frontendUrl, outputsDir) {
 }
 
 /**
+ * Handle GET /api/assets — list files in the public directory.
+ */
+function handleListAssets(req, res, publicDir) {
+  if (!publicDir || !fs.existsSync(publicDir)) {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ assets: [], publicDir: null }));
+    return;
+  }
+
+  const assets = [];
+
+  function walkDir(dir, prefix) {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      const relativePath = prefix ? `${prefix}/${entry.name}` : entry.name;
+
+      if (entry.isDirectory()) {
+        walkDir(fullPath, relativePath);
+      } else {
+        const stat = fs.statSync(fullPath);
+        const ext = path.extname(entry.name).toLowerCase();
+        assets.push({
+          name: entry.name,
+          path: relativePath,
+          size: stat.size,
+          extension: ext,
+          type: getAssetType(ext),
+        });
+      }
+    }
+  }
+
+  walkDir(publicDir, '');
+
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ assets, publicDir }));
+}
+
+/**
+ * Classify file type from extension.
+ */
+function getAssetType(ext) {
+  const imageExts = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.avif', '.bmp', '.ico'];
+  const videoExts = ['.mp4', '.webm', '.mov', '.avi', '.mkv'];
+  const audioExts = ['.mp3', '.wav', '.ogg', '.aac', '.flac', '.m4a'];
+  const fontExts = ['.woff', '.woff2', '.ttf', '.otf', '.eot'];
+  const dataExts = ['.json', '.csv', '.xml', '.txt'];
+
+  if (imageExts.includes(ext)) return 'image';
+  if (videoExts.includes(ext)) return 'video';
+  if (audioExts.includes(ext)) return 'audio';
+  if (fontExts.includes(ext)) return 'font';
+  if (dataExts.includes(ext)) return 'data';
+  return 'other';
+}
+
+/**
  * Handle GET /outputs/* — serve rendered files.
  */
 function handleOutputFile(req, res, outputsDir) {
-  const filename = req.url.replace('/outputs/', '');
-  // Prevent path traversal
-  if (filename.indexOf('..') !== -1 || filename.indexOf('/') !== -1) {
+  // Decode URL and resolve path
+  let filename;
+  try {
+    filename = decodeURIComponent(req.url.replace('/outputs/', ''));
+  } catch {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Invalid URL encoding' }));
+    return;
+  }
+
+  // Resolve both paths to absolute and verify the file is within outputsDir
+  const resolvedOutputs = path.resolve(outputsDir);
+  const filePath = path.resolve(outputsDir, filename);
+
+  if (!filePath.startsWith(resolvedOutputs + path.sep) && filePath !== resolvedOutputs) {
     res.writeHead(403, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'Forbidden' }));
     return;
   }
-
-  const filePath = path.join(outputsDir, filename);
   if (!fs.existsSync(filePath)) {
     res.writeHead(404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'File not found' }));
@@ -330,7 +404,7 @@ export async function previewCommand(options) {
   for (const p of possiblePaths) {
     if (fs.existsSync(path.join(p, 'package.json'))) {
       const pkg = JSON.parse(fs.readFileSync(path.join(p, 'package.json'), 'utf-8'));
-      if (pkg.name === 'framely-frontend' || fs.existsSync(path.join(p, 'src/lib/context.jsx'))) {
+      if (pkg.name === '@framely/frontend' || pkg.name === 'framely-frontend' || fs.existsSync(path.join(p, 'src/lib/context.tsx')) || fs.existsSync(path.join(p, 'src/lib/context.jsx'))) {
         frontendDir = p;
         break;
       }
@@ -370,7 +444,8 @@ export async function previewCommand(options) {
 
   // Start the render API
   const frontendUrl = `http://localhost:${port}`;
-  const apiServer = startRenderApi(apiPort, frontendUrl, outputsDir);
+  const publicDir = path.resolve(frontendDir, 'src/public');
+  const apiServer = startRenderApi(apiPort, frontendUrl, outputsDir, publicDir);
 
   // Set environment variables
   const env = {
