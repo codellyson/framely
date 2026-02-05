@@ -1,5 +1,8 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
 import { TimelineProvider, useTimeline } from '../lib/context';
+import { Sequence } from '../lib/Sequence';
+import { Video } from '../lib/Video';
+import { Img } from '../lib/Img';
 import './Player.css';
 
 /**
@@ -13,6 +16,7 @@ export function Player({
   fps = 30,
   durationInFrames = 300,
   inputProps = {},
+  sequences = [],
   style,
   className,
 }) {
@@ -28,6 +32,7 @@ export function Player({
         compositionWidth={compositionWidth}
         compositionHeight={compositionHeight}
         inputProps={inputProps}
+        sequences={sequences}
         style={style}
         className={className}
       />
@@ -35,11 +40,18 @@ export function Player({
   );
 }
 
+/**
+ * PlayerView - Renders either a composition component or timeline sequences.
+ *
+ * If `component` is provided, renders the composition component.
+ * If `sequences` is provided (and no component), renders sequences as timeline clips.
+ */
 export function PlayerView({
   component: Component,
   compositionWidth,
   compositionHeight,
   inputProps,
+  sequences = [],
   style,
   className,
 }) {
@@ -158,9 +170,85 @@ export function PlayerView({
             height: compositionHeight,
             transform: `scale(${scale})`,
             transformOrigin: 'center center',
+            position: 'relative',
+            background: '#000',
           }}
         >
-          <Component {...inputProps} />
+          {/* Render composition component if provided */}
+          {Component && <Component {...inputProps} />}
+
+          {/* Render timeline sequences if no component */}
+          {!Component && sequences.map((seq, index) => (
+            <Sequence
+              key={seq.id || `seq-${index}`}
+              from={seq.from}
+              durationInFrames={seq.durationInFrames}
+              name={seq.name}
+              style={{ zIndex: index + 1 }}
+            >
+              {/* Video asset */}
+              {seq.assetType === 'video' && seq.assetPath && (
+                <Video
+                  src={seq.assetPath}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                />
+              )}
+              {/* Image asset */}
+              {seq.assetType === 'image' && seq.assetPath && (
+                <Img
+                  src={seq.assetPath}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                />
+              )}
+              {/* Solid color or default scene */}
+              {!seq.assetPath && (
+                <div
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    background: seq.color || '#1a1a2e',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontSize: 48,
+                    fontFamily: 'system-ui, sans-serif',
+                    fontWeight: 700,
+                  }}
+                >
+                  {seq.name || `Scene ${index + 1}`}
+                </div>
+              )}
+            </Sequence>
+          ))}
+
+          {/* Empty state for editor mode */}
+          {!Component && sequences.length === 0 && (
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'rgba(255,255,255,0.4)',
+                fontSize: 16,
+                fontFamily: 'system-ui, sans-serif',
+                textAlign: 'center',
+                padding: 40,
+              }}
+            >
+              Add assets from the panel to start creating your video
+            </div>
+          )}
         </div>
       </div>
 

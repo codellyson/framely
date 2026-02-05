@@ -23,6 +23,133 @@ import { getCodecConfig } from '../utils/codecs.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
+ * Mock templates data for the marketplace API
+ * In production, this would come from a database
+ */
+const MOCK_TEMPLATES = [
+  {
+    id: 'social-intro-1',
+    name: 'Modern Social Intro',
+    description: 'Clean, modern intro animation perfect for social media videos.',
+    category: 'intro-outro',
+    tags: ['intro', 'social', 'modern', 'minimal'],
+    preview: { thumbnail: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&h=225&fit=crop' },
+    author: { id: 'framely', name: 'Framely Team', verified: true },
+    bundleUrl: 'https://cdn.framely.dev/templates/social-intro-1/bundle.js',
+    version: '1.0.0',
+    width: 1080, height: 1920, fps: 30, durationInFrames: 90,
+    defaultProps: { title: 'Your Title Here', subtitle: 'Subtitle text', accentColor: '#6366f1' },
+    downloads: 1250, rating: 4.8, featured: true,
+    createdAt: '2024-01-15T00:00:00Z', updatedAt: '2024-01-20T00:00:00Z',
+  },
+  {
+    id: 'youtube-subscribe',
+    name: 'Subscribe Animation',
+    description: 'Eye-catching subscribe button animation with bell notification.',
+    category: 'social-media',
+    tags: ['youtube', 'subscribe', 'animation', 'cta'],
+    preview: { thumbnail: 'https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=400&h=225&fit=crop' },
+    author: { id: 'framely', name: 'Framely Team', verified: true },
+    bundleUrl: 'https://cdn.framely.dev/templates/youtube-subscribe/bundle.js',
+    version: '1.0.0',
+    width: 1920, height: 1080, fps: 30, durationInFrames: 120,
+    defaultProps: { channelName: 'Your Channel', buttonColor: '#FF0000', showBell: true },
+    downloads: 2340, rating: 4.9, featured: true,
+    createdAt: '2024-01-10T00:00:00Z', updatedAt: '2024-01-18T00:00:00Z',
+  },
+  {
+    id: 'lower-third-1',
+    name: 'Clean Lower Third',
+    description: 'Professional lower third with smooth slide-in animation.',
+    category: 'lower-thirds',
+    tags: ['lower-third', 'professional', 'news'],
+    preview: { thumbnail: 'https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=400&h=225&fit=crop' },
+    author: { id: 'motion-pro', name: 'Motion Pro', verified: true },
+    bundleUrl: 'https://cdn.framely.dev/templates/lower-third-1/bundle.js',
+    version: '1.2.0',
+    width: 1920, height: 1080, fps: 30, durationInFrames: 150,
+    defaultProps: { name: 'John Doe', title: 'CEO & Founder', accentColor: '#3b82f6' },
+    downloads: 890, rating: 4.6, featured: false,
+    createdAt: '2024-01-08T00:00:00Z', updatedAt: '2024-01-15T00:00:00Z',
+  },
+  {
+    id: 'text-reveal-1',
+    name: 'Kinetic Text Reveal',
+    description: 'Dynamic text reveal with character-by-character animation.',
+    category: 'text-animations',
+    tags: ['text', 'kinetic', 'reveal', 'typography'],
+    preview: { thumbnail: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400&h=225&fit=crop' },
+    author: { id: 'type-master', name: 'Type Master', verified: false },
+    bundleUrl: 'https://cdn.framely.dev/templates/text-reveal-1/bundle.js',
+    version: '1.0.0',
+    width: 1920, height: 1080, fps: 60, durationInFrames: 180,
+    defaultProps: { text: 'Your text here', fontSize: 120, color: '#ffffff' },
+    downloads: 1567, rating: 4.7, featured: false,
+    createdAt: '2024-01-05T00:00:00Z', updatedAt: '2024-01-12T00:00:00Z',
+  },
+  {
+    id: 'gradient-bg-1',
+    name: 'Animated Gradient',
+    description: 'Mesmerizing animated gradient background with smooth color transitions.',
+    category: 'backgrounds',
+    tags: ['background', 'gradient', 'animated', 'loop'],
+    preview: { thumbnail: 'https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=400&h=225&fit=crop' },
+    author: { id: 'framely', name: 'Framely Team', verified: true },
+    bundleUrl: 'https://cdn.framely.dev/templates/gradient-bg-1/bundle.js',
+    version: '1.0.0',
+    width: 1920, height: 1080, fps: 30, durationInFrames: 300,
+    defaultProps: { colors: ['#6366f1', '#8b5cf6', '#d946ef'], speed: 1 },
+    downloads: 3210, rating: 4.5, featured: false,
+    createdAt: '2024-01-03T00:00:00Z', updatedAt: '2024-01-10T00:00:00Z',
+  },
+  {
+    id: 'promo-slide-1',
+    name: 'Product Showcase',
+    description: 'Professional product showcase template with dynamic transitions.',
+    category: 'marketing',
+    tags: ['product', 'showcase', 'promo', 'ecommerce'],
+    preview: { thumbnail: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=225&fit=crop' },
+    author: { id: 'ad-studio', name: 'Ad Studio', verified: true },
+    bundleUrl: 'https://cdn.framely.dev/templates/promo-slide-1/bundle.js',
+    version: '2.0.0',
+    width: 1080, height: 1080, fps: 30, durationInFrames: 180,
+    defaultProps: { productName: 'Product Name', price: '$99.99', brandColor: '#10b981' },
+    downloads: 756, rating: 4.4, featured: true,
+    createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-08T00:00:00Z',
+  },
+  {
+    id: 'presentation-1',
+    name: 'Slide Transition Pack',
+    description: 'Collection of smooth slide transitions for presentations.',
+    category: 'presentation',
+    tags: ['presentation', 'slides', 'transition', 'corporate'],
+    preview: { thumbnail: 'https://images.unsplash.com/photo-1531538606174-0f90ff5dce83?w=400&h=225&fit=crop' },
+    author: { id: 'slide-pro', name: 'Slide Pro', verified: false },
+    bundleUrl: 'https://cdn.framely.dev/templates/presentation-1/bundle.js',
+    version: '1.1.0',
+    width: 1920, height: 1080, fps: 30, durationInFrames: 60,
+    defaultProps: { transitionType: 'slide', direction: 'left' },
+    downloads: 445, rating: 4.3, featured: false,
+    createdAt: '2023-12-28T00:00:00Z', updatedAt: '2024-01-05T00:00:00Z',
+  },
+  {
+    id: 'instagram-story',
+    name: 'Story Template',
+    description: 'Trendy Instagram story template with animated stickers and text effects.',
+    category: 'social-media',
+    tags: ['instagram', 'story', 'social', 'trendy'],
+    preview: { thumbnail: 'https://images.unsplash.com/photo-1611262588024-d12430b98920?w=400&h=225&fit=crop' },
+    author: { id: 'social-creator', name: 'Social Creator', verified: true },
+    bundleUrl: 'https://cdn.framely.dev/templates/instagram-story/bundle.js',
+    version: '1.0.0',
+    width: 1080, height: 1920, fps: 30, durationInFrames: 150,
+    defaultProps: { headline: 'New Post!', backgroundColor: '#f472b6' },
+    downloads: 1890, rating: 4.6, featured: false,
+    createdAt: '2023-12-25T00:00:00Z', updatedAt: '2024-01-02T00:00:00Z',
+  },
+];
+
+/**
  * Parse JSON request body.
  */
 function parseBody(req) {
@@ -78,6 +205,25 @@ function startRenderApi(apiPort, frontendUrl, outputsDir, publicDir) {
     // GET /api/assets — list project static assets
     if (req.method === 'GET' && req.url === '/api/assets') {
       handleListAssets(req, res, publicDir);
+      return;
+    }
+
+    // GET /api/templates/categories — list template categories
+    if (req.method === 'GET' && req.url === '/api/templates/categories') {
+      handleTemplateCategories(req, res);
+      return;
+    }
+
+    // GET /api/templates/:id — get single template
+    if (req.method === 'GET' && req.url.match(/^\/api\/templates\/[^/]+$/)) {
+      const id = req.url.replace('/api/templates/', '');
+      handleGetTemplate(req, res, id);
+      return;
+    }
+
+    // GET /api/templates — list templates with filters
+    if (req.method === 'GET' && req.url.startsWith('/api/templates')) {
+      handleListTemplates(req, res);
       return;
     }
 
@@ -160,6 +306,15 @@ async function handleRender(req, res, frontendUrl, outputsDir) {
     const renderUrl = new URL(frontendUrl);
     renderUrl.searchParams.set('renderMode', 'true');
     renderUrl.searchParams.set('composition', compositionId);
+    // For templates, pass the original template ID so the renderer can find the component
+    if (body.templateId) {
+      renderUrl.searchParams.set('templateId', body.templateId);
+    }
+    // Pass composition dimensions for template rendering
+    renderUrl.searchParams.set('width', String(width));
+    renderUrl.searchParams.set('height', String(height));
+    renderUrl.searchParams.set('fps', String(fps));
+    renderUrl.searchParams.set('durationInFrames', String(endFrame - startFrame + 1));
     if (body.inputProps && Object.keys(body.inputProps).length > 0) {
       renderUrl.searchParams.set('props', encodeURIComponent(JSON.stringify(body.inputProps)));
     }
@@ -381,6 +536,91 @@ function handleOutputFile(req, res, outputsDir) {
   });
 
   fs.createReadStream(filePath).pipe(res);
+}
+
+/**
+ * Handle GET /api/templates — list templates with filters.
+ */
+function handleListTemplates(req, res) {
+  const url = new URL(req.url, `http://localhost`);
+  const category = url.searchParams.get('category');
+  const search = url.searchParams.get('search');
+  const featured = url.searchParams.get('featured');
+  const sortBy = url.searchParams.get('sortBy') || 'newest';
+  const page = parseInt(url.searchParams.get('page') || '1', 10);
+  const pageSize = parseInt(url.searchParams.get('pageSize') || '12', 10);
+
+  let filtered = [...MOCK_TEMPLATES];
+
+  // Filter by category
+  if (category) {
+    filtered = filtered.filter(t => t.category === category);
+  }
+
+  // Filter by search
+  if (search) {
+    const searchLower = search.toLowerCase();
+    filtered = filtered.filter(t =>
+      t.name.toLowerCase().includes(searchLower) ||
+      t.description.toLowerCase().includes(searchLower) ||
+      t.tags.some(tag => tag.toLowerCase().includes(searchLower))
+    );
+  }
+
+  // Filter by featured
+  if (featured === 'true') {
+    filtered = filtered.filter(t => t.featured);
+  }
+
+  // Sort
+  if (sortBy === 'popular') {
+    filtered.sort((a, b) => (b.downloads || 0) - (a.downloads || 0));
+  } else if (sortBy === 'rating') {
+    filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+  } else {
+    // newest
+    filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+
+  // Paginate
+  const start = (page - 1) * pageSize;
+  const templates = filtered.slice(start, start + pageSize);
+
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({
+    templates,
+    total: filtered.length,
+    page,
+    pageSize,
+    hasMore: start + pageSize < filtered.length,
+  }));
+}
+
+/**
+ * Handle GET /api/templates/:id — get single template.
+ */
+function handleGetTemplate(req, res, id) {
+  const template = MOCK_TEMPLATES.find(t => t.id === id);
+  if (!template) {
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Template not found' }));
+    return;
+  }
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(template));
+}
+
+/**
+ * Handle GET /api/templates/categories — list categories with counts.
+ */
+function handleTemplateCategories(req, res) {
+  const counts = {};
+  MOCK_TEMPLATES.forEach(t => {
+    counts[t.category] = (counts[t.category] || 0) + 1;
+  });
+  const categories = Object.entries(counts).map(([category, count]) => ({ category, count }));
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(categories));
 }
 
 /**

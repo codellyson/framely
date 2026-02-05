@@ -69,7 +69,8 @@ function assetsApiPlugin() {
   };
 }
 
-const apiPort = process.env.VITE_RENDER_API_PORT;
+// Default API port is 3001 (frontend port + 1)
+const apiPort = process.env.VITE_RENDER_API_PORT || '3001';
 
 export default defineConfig({
   plugins: [react(), assetsApiPlugin()],
@@ -77,18 +78,23 @@ export default defineConfig({
     port: 3000,
     cors: true,
     host: '0.0.0.0',
-    // Only proxy to the render API if it's explicitly configured (framely preview sets this)
-    ...(apiPort ? {
-      proxy: {
-        '/api': {
-          target: `http://localhost:${apiPort}`,
-          changeOrigin: true,
-        },
-        '/outputs': {
-          target: `http://localhost:${apiPort}`,
-          changeOrigin: true,
-        },
+    proxy: {
+      '/api/render': {
+        target: `http://localhost:${apiPort}`,
+        changeOrigin: true,
       },
-    } : {}),
+      '/api/still': {
+        target: `http://localhost:${apiPort}`,
+        changeOrigin: true,
+      },
+      '/api/templates': {
+        target: `http://localhost:${apiPort}`,
+        changeOrigin: true,
+      },
+      '/outputs': {
+        target: `http://localhost:${apiPort}`,
+        changeOrigin: true,
+      },
+    },
   },
 });

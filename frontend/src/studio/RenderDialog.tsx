@@ -34,6 +34,8 @@ export interface Composition {
   height: number;
   fps: number;
   durationInFrames: number;
+  _templateId?: string;
+  _isTemplate?: boolean;
 }
 
 /** Render progress event received via NDJSON stream. */
@@ -185,6 +187,8 @@ export function RenderDialog({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           compositionId: composition.id,
+          templateId: composition._templateId,
+          isTemplate: composition._isTemplate,
           width: composition.width,
           height: composition.height,
           fps: composition.fps,
