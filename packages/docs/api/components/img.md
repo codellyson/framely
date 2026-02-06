@@ -5,7 +5,7 @@ Renders an image. Use this instead of `<img>` to ensure images are loaded before
 ## Usage
 
 ```jsx
-import { Img, AbsoluteFill } from 'framely';
+import { Img, AbsoluteFill } from '@codellyson/framely';
 
 function MyVideo() {
   return (

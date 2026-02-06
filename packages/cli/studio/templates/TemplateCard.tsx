@@ -1,4 +1,4 @@
-import type { Template } from 'framely';
+import type { Template } from '@codellyson/framely';
 
 export interface TemplateCardProps {
   template: Template;

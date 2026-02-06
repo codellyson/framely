@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { TimelineProvider, getCompositionTree } from 'framely';
+import { TimelineProvider, getCompositionTree } from '@codellyson/framely';
 import { PlayerView } from './player/Player';
 import { RenderDialog } from './RenderDialog';
 import { ExportDialog } from './ShareDialog';

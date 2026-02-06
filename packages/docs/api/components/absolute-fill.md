@@ -5,7 +5,7 @@ A component that fills its parent completely. The most common layout component i
 ## Usage
 
 ```jsx
-import { AbsoluteFill } from 'framely';
+import { AbsoluteFill } from '@codellyson/framely';
 
 function MyVideo() {
   return (

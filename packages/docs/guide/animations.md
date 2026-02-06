@@ -7,7 +7,7 @@ Framely provides two main approaches to animation: `interpolate()` for value map
 Maps a value from one range to another. The most common way to create animations:
 
 ```jsx
-import { useCurrentFrame, interpolate } from 'framely';
+import { useCurrentFrame, interpolate } from '@codellyson/framely';
 
 function FadeIn() {
   const frame = useCurrentFrame();
@@ -24,7 +24,7 @@ See the full [interpolate() API](/api/animation/interpolate) for details.
 Creates natural-feeling, physics-based spring animations:
 
 ```jsx
-import { useCurrentFrame, spring } from 'framely';
+import { useCurrentFrame, spring } from '@codellyson/framely';
 
 function BounceIn() {
   const frame = useCurrentFrame();
@@ -45,7 +45,7 @@ See the full [spring() API](/api/animation/spring) for details.
 Use easing functions with `interpolate()` for non-linear motion:
 
 ```jsx
-import { Easing, interpolate, useCurrentFrame } from 'framely';
+import { Easing, interpolate, useCurrentFrame } from '@codellyson/framely';
 
 function EasedAnimation() {
   const frame = useCurrentFrame();

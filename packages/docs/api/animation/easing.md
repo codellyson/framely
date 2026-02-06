@@ -5,7 +5,7 @@ Easing functions control the rate of change over time. Use them with `interpolat
 ## Usage
 
 ```jsx
-import { Easing, interpolate, useCurrentFrame } from 'framely';
+import { Easing, interpolate, useCurrentFrame } from '@codellyson/framely';
 
 function EasedAnimation() {
   const frame = useCurrentFrame();

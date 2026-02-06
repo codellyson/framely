@@ -5,7 +5,7 @@ Returns the current frame number. This is the primary hook for creating animatio
 ## Usage
 
 ```jsx
-import { useCurrentFrame } from 'framely';
+import { useCurrentFrame } from '@codellyson/framely';
 
 function MyComponent() {
   const frame = useCurrentFrame();

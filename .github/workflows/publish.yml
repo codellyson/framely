@@ -31,19 +31,19 @@ jobs:
       - name: Run tests
         run: pnpm test
 
-      - name: Publish framely (core)
+      - name: Publish @codellyson/framely (core)
         run: npm publish --provenance --access public
         working-directory: packages/framely
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish @framely/cli
+      - name: Publish @codellyson/framely-cli
         run: npm publish --provenance --access public
         working-directory: packages/cli
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish create-framely
+      - name: Publish @codellyson/create-framely
         run: npm publish --provenance --access public
         working-directory: packages/create-framely
         env:

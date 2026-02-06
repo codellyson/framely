@@ -17,7 +17,7 @@ spring({
 ## Basic Usage
 
 ```jsx
-import { useCurrentFrame, spring } from 'framely';
+import { useCurrentFrame, spring } from '@codellyson/framely';
 
 function MyComponent() {
   const frame = useCurrentFrame();
@@ -66,7 +66,7 @@ const scale = spring({
 Use built-in presets:
 
 ```jsx
-import { spring, springPresets } from 'framely';
+import { spring, springPresets } from '@codellyson/framely';
 
 // Gentle spring
 spring({ frame, fps: 30, config: springPresets.gentle });

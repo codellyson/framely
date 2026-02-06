@@ -9,7 +9,7 @@ In Framely, time is measured in frames. Every video has a fixed frame rate (FPS)
 - Use `useCurrentFrame()` to get the current frame number
 
 ```jsx
-import { useCurrentFrame, useVideoConfig } from 'framely';
+import { useCurrentFrame, useVideoConfig } from '@codellyson/framely';
 
 function MyVideo() {
   const frame = useCurrentFrame();           // 0, 1, 2, ...

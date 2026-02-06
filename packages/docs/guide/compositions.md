@@ -5,7 +5,7 @@ A composition is the top-level container for a video. It defines the video's dim
 ## Defining a Composition
 
 ```jsx
-import { Composition } from 'framely';
+import { Composition } from '@codellyson/framely';
 import { MyVideo } from './MyVideo';
 
 export function Root() {

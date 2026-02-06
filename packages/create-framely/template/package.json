@@ -10,8 +10,8 @@
     "still": "framely still"
   },
   "dependencies": {
-    "framely": "^0.1.0",
-    "@framely/cli": "^0.1.0",
+    "@codellyson/framely": "^0.1.0",
+    "@codellyson/framely-cli": "^0.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   }

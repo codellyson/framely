@@ -5,7 +5,7 @@ Returns the configuration of the current composition.
 ## Usage
 
 ```jsx
-import { useVideoConfig } from 'framely';
+import { useVideoConfig } from '@codellyson/framely';
 
 function MyComponent() {
   const { fps, width, height, durationInFrames } = useVideoConfig();

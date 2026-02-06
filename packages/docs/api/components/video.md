@@ -5,7 +5,7 @@ Embeds a video that syncs with the Framely timeline.
 ## Usage
 
 ```jsx
-import { Video, AbsoluteFill } from 'framely';
+import { Video, AbsoluteFill } from '@codellyson/framely';
 
 function MyVideo() {
   return (

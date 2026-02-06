@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
-import type { Template } from 'framely';
-import { CATEGORY_LABELS } from 'framely';
+import type { Template } from '@codellyson/framely';
+import { CATEGORY_LABELS } from '@codellyson/framely';
 
 export interface TemplatePreviewDialogProps {
   open: boolean;

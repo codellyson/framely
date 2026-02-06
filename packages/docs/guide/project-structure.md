@@ -22,7 +22,7 @@ my-video/
 The entry point. It imports your Root component and registers it:
 
 ```jsx
-import { registerRoot } from 'framely';
+import { registerRoot } from '@codellyson/framely';
 import { Root } from './Root';
 
 registerRoot(Root);
@@ -33,7 +33,7 @@ registerRoot(Root);
 Declares all your compositions:
 
 ```jsx
-import { Composition } from 'framely';
+import { Composition } from '@codellyson/framely';
 import { HelloWorld } from './compositions/HelloWorld';
 import { Intro } from './compositions/Intro';
 

@@ -5,7 +5,7 @@ Adds audio that syncs with the Framely timeline.
 ## Usage
 
 ```jsx
-import { Audio, AbsoluteFill } from 'framely';
+import { Audio, AbsoluteFill } from '@codellyson/framely';
 
 function MyVideo() {
   return (
@@ -29,7 +29,7 @@ function MyVideo() {
 ## Volume Fade
 
 ```jsx
-import { interpolate, useCurrentFrame, Audio } from 'framely';
+import { interpolate, useCurrentFrame, Audio } from '@codellyson/framely';
 
 function WithFade() {
   const frame = useCurrentFrame();

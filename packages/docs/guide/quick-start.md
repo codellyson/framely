@@ -23,7 +23,7 @@ Open `http://localhost:3000` to see the studio.
 Open `src/compositions/HelloWorld.jsx`:
 
 ```jsx
-import { AbsoluteFill, useCurrentFrame, spring } from 'framely';
+import { AbsoluteFill, useCurrentFrame, spring } from '@codellyson/framely';
 
 export function HelloWorld() {
   const frame = useCurrentFrame();

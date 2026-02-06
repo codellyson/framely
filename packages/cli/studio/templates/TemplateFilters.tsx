@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { templatesApi, CATEGORY_LABELS } from 'framely';
-import type { TemplateCategory, TemplatesFilterParams, CategoryCount } from 'framely';
+import { templatesApi, CATEGORY_LABELS } from '@codellyson/framely';
+import type { TemplateCategory, TemplatesFilterParams, CategoryCount } from '@codellyson/framely';
 
 export interface TemplateFiltersProps {
   filters: TemplatesFilterParams;

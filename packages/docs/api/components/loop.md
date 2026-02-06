@@ -5,7 +5,7 @@ Repeats its children for a given duration.
 ## Usage
 
 ```jsx
-import { Loop, AbsoluteFill } from 'framely';
+import { Loop, AbsoluteFill } from '@codellyson/framely';
 
 function MyVideo() {
   return (

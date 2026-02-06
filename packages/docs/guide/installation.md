@@ -25,7 +25,7 @@ Then create an entry file that registers your compositions:
 
 ```jsx
 // src/index.jsx
-import { registerRoot } from 'framely';
+import { registerRoot } from '@codellyson/framely';
 import { Root } from './Root';
 
 registerRoot(Root);
@@ -33,7 +33,7 @@ registerRoot(Root);
 
 ```jsx
 // src/Root.jsx
-import { Composition } from 'framely';
+import { Composition } from '@codellyson/framely';
 import { MyVideo } from './MyVideo';
 
 export function Root() {

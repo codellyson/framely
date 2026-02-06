@@ -1,5 +1,5 @@
 {
-  "name": "@framely/cli",
+  "name": "@codellyson/framely-cli",
   "version": "0.1.0",
   "description": "CLI for Framely - programmatic video creation with React",
   "type": "module",
@@ -25,14 +25,14 @@
     "@vitejs/plugin-react": "^4.2.1"
   },
   "devDependencies": {
-    "framely": "workspace:*",
+    "@codellyson/framely": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "peerDependencies": {
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "framely": "^0.1.0"
+    "@codellyson/framely": "^0.1.0"
   },
   "engines": {
     "node": ">=18.0.0"

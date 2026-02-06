@@ -36,7 +36,7 @@ features:
 ## Quick Example
 
 ```jsx
-import { useCurrentFrame, spring, AbsoluteFill, Composition } from 'framely';
+import { useCurrentFrame, spring, AbsoluteFill, Composition } from '@codellyson/framely';
 
 function MyVideo() {
   const frame = useCurrentFrame();

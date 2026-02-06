@@ -1,4 +1,4 @@
-import { AbsoluteFill, useCurrentFrame, useVideoConfig } from 'framely';
+import { AbsoluteFill, useCurrentFrame, useVideoConfig } from '@codellyson/framely';
 
 /**
  * Animated Gradient Background Template

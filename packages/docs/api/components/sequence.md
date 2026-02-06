@@ -5,7 +5,7 @@ Offsets the time for its children. Use it to delay when content appears.
 ## Usage
 
 ```jsx
-import { Sequence, AbsoluteFill } from 'framely';
+import { Sequence, AbsoluteFill } from '@codellyson/framely';
 
 function MyVideo() {
   return (

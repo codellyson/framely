@@ -4,12 +4,16 @@
   "private": true,
   "description": "Programmatic video creation with React",
   "type": "module",
+  "author": "codellyson",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/codellyson/framely.git"},
   "engines": {
     "node": ">=18.0.0"
   },
   "scripts": {
-    "build": "pnpm --filter framely build",
-    "dev": "pnpm --filter framely dev",
+    "build": "pnpm --filter @codellyson/framely build",
+    "dev": "pnpm --filter @codellyson/framely dev",
     "preview": "node packages/cli/index.js preview",
     "render": "node packages/cli/index.js render",
     "still": "node packages/cli/index.js still",
@@ -19,9 +23,9 @@
     "lint": "eslint packages/cli/ packages/framely/src/",
     "lint:fix": "eslint packages/cli/ packages/framely/src/ --fix",
     "format": "prettier --write \"packages/cli/**/*.js\" \"packages/framely/src/**/*.{ts,tsx}\"",
-    "docs:dev": "pnpm --filter @framely/docs dev",
-    "docs:build": "pnpm --filter @framely/docs build",
-    "docs:preview": "pnpm --filter @framely/docs preview"
+    "docs:dev": "pnpm --filter @codellyson/framely-docs dev",
+    "docs:build": "pnpm --filter @codellyson/framely-docs build",
+    "docs:preview": "pnpm --filter @codellyson/framely-docs preview"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
@@ -37,7 +41,7 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-react": "^7.34.0",
     "eslint-plugin-react-hooks": "^5.0.0",
-    "framely": "workspace:*",
+    "@codellyson/framely": "workspace:*",
     "jsdom": "^24.0.0",
     "prettier": "^3.2.0",
     "react": "^18.2.0",

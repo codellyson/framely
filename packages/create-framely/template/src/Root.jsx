@@ -1,4 +1,4 @@
-import { Composition } from 'framely';
+import { Composition } from '@codellyson/framely';
 import { HelloWorld } from './compositions/HelloWorld';
 
 export function Root() {

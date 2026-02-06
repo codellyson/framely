@@ -1,5 +1,5 @@
 {
-  "name": "create-framely",
+  "name": "@codellyson/create-framely",
   "version": "0.1.0",
   "description": "Create a new Framely video project",
   "type": "module",

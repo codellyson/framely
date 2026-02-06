@@ -4,7 +4,7 @@ import {
   interpolate,
   spring,
   AbsoluteFill,
-} from 'framely';
+} from '@codellyson/framely';
 
 export function HelloWorld() {
   const frame = useCurrentFrame();

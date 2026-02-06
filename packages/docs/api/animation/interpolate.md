@@ -16,7 +16,7 @@ interpolate(
 ## Basic Usage
 
 ```jsx
-import { useCurrentFrame, interpolate } from 'framely';
+import { useCurrentFrame, interpolate } from '@codellyson/framely';
 
 function MyComponent() {
   const frame = useCurrentFrame();
@@ -66,7 +66,7 @@ const opacity = interpolate(
 Apply an easing function for non-linear interpolation:
 
 ```jsx
-import { Easing } from 'framely';
+import { Easing } from '@codellyson/framely';
 
 const scale = interpolate(
   frame,

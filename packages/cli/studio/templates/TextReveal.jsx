@@ -1,4 +1,4 @@
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate } from 'framely';
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate } from '@codellyson/framely';
 
 /**
  * Kinetic Text Reveal Template

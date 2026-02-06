@@ -1,5 +1,5 @@
 {
-  "name": "framely",
+  "name": "@codellyson/framely",
   "version": "0.1.0",
   "description": "Programmatic video creation with React",
   "type": "module",

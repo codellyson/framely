@@ -5,7 +5,7 @@ Sequences let you arrange content over time. They offset the time for their chil
 ## Basic Usage
 
 ```jsx
-import { Sequence, AbsoluteFill } from 'framely';
+import { Sequence, AbsoluteFill } from '@codellyson/framely';
 
 function MyVideo() {
   return (
@@ -47,7 +47,7 @@ This makes compositions more reusable — your components don't need to know whe
 Use `<Series>` to arrange sequences back-to-back without calculating offsets:
 
 ```jsx
-import { Series, AbsoluteFill } from 'framely';
+import { Series, AbsoluteFill } from '@codellyson/framely';
 
 function MyVideo() {
   return (

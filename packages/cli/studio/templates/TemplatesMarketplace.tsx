@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { templatesApi } from 'framely';
-import type { Template, TemplatesFilterParams } from 'framely';
+import { templatesApi } from '@codellyson/framely';
+import type { Template, TemplatesFilterParams } from '@codellyson/framely';
 import { TemplateCard } from './TemplateCard';
 import { TemplateFilters } from './TemplateFilters';
 import { TemplatePreviewDialog } from './TemplatePreviewDialog';

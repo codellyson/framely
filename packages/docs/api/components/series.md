@@ -5,7 +5,7 @@ Arranges sequences back-to-back without manually calculating offsets.
 ## Usage
 
 ```jsx
-import { Series, AbsoluteFill } from 'framely';
+import { Series, AbsoluteFill } from '@codellyson/framely';
 
 function MyVideo() {
   return (

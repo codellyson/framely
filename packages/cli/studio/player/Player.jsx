@@ -1,5 +1,5 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
-import { TimelineProvider, useTimeline, Sequence, Video, Img } from 'framely';
+import { TimelineProvider, useTimeline, Sequence, Video, Img } from '@codellyson/framely';
 import './Player.css';
 
 /**

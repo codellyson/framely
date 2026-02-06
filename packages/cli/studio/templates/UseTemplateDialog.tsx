@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import type { Template } from 'framely';
+import type { Template } from '@codellyson/framely';
 import { PropsEditor } from '../PropsEditor.tsx';
 
 export interface UseTemplateDialogProps {
