@@ -7,3 +7,5 @@ outputs/
 *.mov
 *.gif
 pnpm-debug.log*
+packages/docs/.vitepress/cache
+packages/docs/.vitepress/dist

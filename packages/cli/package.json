@@ -1,0 +1,60 @@
+{
+  "name": "@framely/cli",
+  "version": "0.1.0",
+  "description": "CLI for Framely - programmatic video creation with React",
+  "type": "module",
+  "bin": {
+    "framely": "./index.js"
+  },
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "commands/",
+    "utils/",
+    "studio/"
+  ],
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.0.0",
+    "ora": "^8.0.1",
+    "playwright": "^1.41.0",
+    "vite": "^5.4.0",
+    "@vitejs/plugin-react": "^4.2.1"
+  },
+  "devDependencies": {
+    "framely": "workspace:*",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "framely": "^0.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/codellyson/framely.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/codellyson/framely#readme",
+  "bugs": {
+    "url": "https://github.com/codellyson/framely/issues"
+  },
+  "author": "codellyson",
+  "keywords": [
+    "video",
+    "rendering",
+    "animation",
+    "react",
+    "cli",
+    "ffmpeg",
+    "playwright"
+  ],
+  "license": "MIT"
+}

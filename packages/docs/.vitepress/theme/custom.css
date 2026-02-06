@@ -1,0 +1,86 @@
+:root {
+  /* Framely brand colors — indigo/purple accent on zinc dark */
+  --vp-c-brand-1: #818cf8;
+  --vp-c-brand-2: #6366f1;
+  --vp-c-brand-3: #4f46e5;
+  --vp-c-brand-soft: rgba(99, 102, 241, 0.14);
+
+  /* Typography */
+  --vp-font-family-base: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --vp-font-family-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Dark mode (default for Framely) */
+.dark {
+  --vp-c-brand-1: #818cf8;
+  --vp-c-brand-2: #6366f1;
+  --vp-c-brand-3: #4f46e5;
+  --vp-c-brand-soft: rgba(99, 102, 241, 0.14);
+
+  /* Zinc-based backgrounds matching Framely studio */
+  --vp-c-bg: #09090b;
+  --vp-c-bg-alt: #18181b;
+  --vp-c-bg-elv: #27272a;
+  --vp-c-bg-soft: #18181b;
+
+  /* Text */
+  --vp-c-text-1: rgba(255, 255, 255, 0.9);
+  --vp-c-text-2: rgba(255, 255, 255, 0.7);
+  --vp-c-text-3: rgba(255, 255, 255, 0.5);
+
+  /* Borders */
+  --vp-c-border: rgba(255, 255, 255, 0.08);
+  --vp-c-divider: rgba(255, 255, 255, 0.06);
+  --vp-c-gutter: #09090b;
+
+  /* Sidebar */
+  --vp-sidebar-bg-color: #18181b;
+
+  /* Code blocks */
+  --vp-code-block-bg: #18181b;
+  --vp-code-tab-bg: #18181b;
+  --vp-code-tab-text-color: rgba(255, 255, 255, 0.7);
+  --vp-code-tab-active-text-color: rgba(255, 255, 255, 0.9);
+  --vp-code-tab-active-bar-color: #6366f1;
+  --vp-code-copy-code-bg: #27272a;
+  --vp-code-copy-code-hover-bg: #3f3f46;
+  --vp-code-copy-code-active-text: rgba(255, 255, 255, 0.9);
+
+  /* Nav */
+  --vp-nav-bg-color: #09090b;
+
+  /* Custom semantic colors */
+  --vp-c-tip-1: #818cf8;
+  --vp-c-tip-2: rgba(99, 102, 241, 0.14);
+  --vp-c-tip-3: rgba(99, 102, 241, 0.08);
+}
+
+/* Hero gradient matching Framely brand */
+.VPHero .name .clip {
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Brand button gradient */
+.VPButton.brand {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  border-color: #6366f1;
+}
+
+.VPButton.brand:hover {
+  background: linear-gradient(135deg, #818cf8, #6366f1);
+  border-color: #818cf8;
+}
+
+/* Feature card icons — match the purple accent */
+.VPFeature .icon {
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+/* Home page section styling */
+.VPHome .container {
+  max-width: 1152px;
+}

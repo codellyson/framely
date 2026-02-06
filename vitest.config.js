@@ -7,14 +7,14 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     include: [
-      'cli/__tests__/**/*.test.{js,ts}',
-      'frontend/src/**/__tests__/**/*.test.{js,jsx,ts,tsx}',
-      'frontend/src/**/*.test.{js,jsx,ts,tsx}',
+      'packages/cli/__tests__/**/*.test.{js,ts}',
+      'packages/framely/src/**/__tests__/**/*.test.{js,jsx,ts,tsx}',
+      'packages/framely/src/**/*.test.{js,jsx,ts,tsx}',
     ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
-      include: ['cli/utils/**', 'frontend/src/lib/**'],
+      include: ['packages/cli/utils/**', 'packages/framely/src/**'],
     },
   },
 });

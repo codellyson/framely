@@ -1,0 +1,28 @@
+{
+  "name": "create-framely",
+  "version": "0.1.0",
+  "description": "Create a new Framely video project",
+  "type": "module",
+  "bin": {
+    "create-framely": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "template/"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/codellyson/framely.git",
+    "directory": "packages/create-framely"
+  },
+  "homepage": "https://github.com/codellyson/framely#readme",
+  "author": "codellyson",
+  "keywords": [
+    "framely",
+    "video",
+    "react",
+    "create",
+    "scaffold"
+  ],
+  "license": "MIT"
+}

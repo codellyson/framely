@@ -1,5 +1,5 @@
 {
-  "name": "framely",
+  "name": "framely-monorepo",
   "version": "0.1.0",
   "private": true,
   "description": "Programmatic video creation with React",
@@ -8,17 +8,20 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "dev": "pnpm --filter @framely/frontend dev",
-    "build": "pnpm --filter @framely/frontend build",
-    "preview": "node cli/index.js preview",
-    "render": "node cli/index.js render",
-    "still": "node cli/index.js still",
+    "build": "pnpm --filter framely build",
+    "dev": "pnpm --filter framely dev",
+    "preview": "node packages/cli/index.js preview",
+    "render": "node packages/cli/index.js render",
+    "still": "node packages/cli/index.js still",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "lint": "eslint cli/ frontend/src/",
-    "lint:fix": "eslint cli/ frontend/src/ --fix",
-    "format": "prettier --write \"cli/**/*.js\" \"frontend/src/**/*.{js,jsx,css}\""
+    "lint": "eslint packages/cli/ packages/framely/src/",
+    "lint:fix": "eslint packages/cli/ packages/framely/src/ --fix",
+    "format": "prettier --write \"packages/cli/**/*.js\" \"packages/framely/src/**/*.{ts,tsx}\"",
+    "docs:dev": "pnpm --filter @framely/docs dev",
+    "docs:build": "pnpm --filter @framely/docs build",
+    "docs:preview": "pnpm --filter @framely/docs preview"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
@@ -32,8 +35,11 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-react": "^7.34.0",
     "eslint-plugin-react-hooks": "^5.0.0",
+    "framely": "workspace:*",
     "jsdom": "^24.0.0",
     "prettier": "^3.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "typescript": "^5.9.3",
     "vitest": "^2.0.0"
   },

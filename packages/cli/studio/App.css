@@ -1,0 +1,605 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Framely Studio Styles
+   Uses design system tokens from design-system.css
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Studio Design Tokens (extends design system) ─── */
+:root {
+  /* Studio-specific aliases using design system colors */
+  --framely-bg-primary: var(--zinc-950, #09090b);
+  --framely-bg-secondary: var(--zinc-900, #18181b);
+  --framely-bg-tertiary: var(--zinc-800, #27272a);
+  --framely-bg-elevated: var(--zinc-700, #3f3f46);
+  --framely-border: rgba(255, 255, 255, 0.06);
+  --framely-border-subtle: rgba(255, 255, 255, 0.04);
+  --framely-text-primary: var(--zinc-100, rgba(255, 255, 255, 0.9));
+  --framely-text-secondary: var(--zinc-400, rgba(255, 255, 255, 0.7));
+  --framely-text-tertiary: var(--zinc-500, rgba(255, 255, 255, 0.5));
+  --framely-text-muted: rgba(255, 255, 255, 0.35);
+  --framely-text-label: rgba(255, 255, 255, 0.55);
+  --framely-accent: var(--indigo-500, #6366f1);
+  --framely-accent-hover: var(--indigo-400, #818cf8);
+  --framely-accent-gradient: linear-gradient(135deg, var(--indigo-500, #6366f1), var(--purple-600, #7c3aed));
+  --framely-success: var(--success, #10b981);
+  --framely-error: var(--error, #ef4444);
+  --framely-sidebar-width: 260px;
+  --framely-right-panel-width: 280px;
+  --framely-header-height: 52px;
+  --framely-focus-ring: 0 0 0 2px var(--framely-accent);
+}
+
+/* ─── Studio Layout ─── */
+.framely-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+  background: var(--framely-bg-primary);
+  color: var(--framely-text-primary);
+}
+
+/* ─── Focus visible styles (studio override) ─── */
+.framely-editor :focus-visible {
+  outline: none;
+  box-shadow: var(--framely-focus-ring);
+}
+
+/* ─── Reduced motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─── Header ─── */
+.framely-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--framely-header-height);
+  padding: 0 20px;
+  background: var(--framely-bg-secondary);
+  border-bottom: 1px solid var(--framely-border);
+  flex-shrink: 0;
+}
+
+.framely-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.framely-logo-icon {
+  display: block;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.framely-logo-text {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--framely-text-primary);
+}
+
+.framely-header-tagline {
+  font-size: 12px;
+  color: var(--framely-text-muted);
+  font-weight: 400;
+}
+
+/* ─── Mode Switcher (unused) ─── */
+.framely-mode-switcher {
+  display: flex;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.framely-mode-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--framely-text-tertiary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.framely-mode-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--framely-text-secondary);
+}
+
+.framely-mode-btn.active {
+  background: var(--framely-accent);
+  color: white;
+}
+
+.framely-mode-btn svg {
+  opacity: 0.8;
+}
+
+.framely-mode-btn.active svg {
+  opacity: 1;
+}
+
+.framely-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.framely-nav-btn {
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: var(--framely-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.framely-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--framely-text-primary);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.framely-icon-btn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--framely-text-secondary);
+  padding: 4px 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.framely-icon-btn:hover:not(:disabled) {
+  color: var(--framely-text-primary);
+  border-color: var(--framely-border);
+}
+
+.framely-icon-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.framely-header-separator {
+  width: 1px;
+  height: 20px;
+  background-color: var(--framely-border);
+  margin: 0 4px;
+}
+
+.framely-render-btn,
+.framely-share-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 16px;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.framely-render-btn {
+  background: var(--framely-accent-gradient);
+}
+
+.framely-share-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.framely-render-btn:hover:not(:disabled),
+.framely-share-btn:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.framely-render-btn:disabled,
+.framely-share-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.framely-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Body: 3-panel layout ─── */
+.framely-editor-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ─── Left Sidebar (compositions) ─── */
+.framely-sidebar {
+  width: var(--framely-sidebar-width);
+  background: var(--framely-bg-secondary);
+  border-right: 1px solid var(--framely-border);
+  overflow-y: auto;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.framely-sidebar-section {
+  padding: 16px;
+  border-bottom: 1px solid var(--framely-border-subtle);
+}
+
+.framely-sidebar-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--framely-text-label);
+  margin-bottom: 10px;
+}
+
+.framely-comp-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--framely-text-secondary);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.framely-comp-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.framely-comp-item.active {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.2);
+  color: white;
+}
+
+.framely-comp-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.framely-comp-name {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.framely-comp-meta {
+  font-size: 11px;
+  color: var(--framely-text-muted);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  margin-top: 2px;
+}
+
+/* ─── Center area (player + timeline) ─── */
+.framely-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.framely-main {
+  flex: 1;
+  display: flex;
+  padding: 16px;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.framely-main .framely-player {
+  flex: 1;
+}
+
+/* ─── Sidebar tabs ─── */
+.framely-sidebar-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--framely-border);
+  flex-shrink: 0;
+}
+
+.framely-sidebar-tab {
+  flex: 1;
+  padding: 10px 0;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--framely-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.framely-sidebar-tab:hover {
+  color: var(--framely-text-secondary);
+}
+
+.framely-sidebar-tab.active {
+  color: var(--framely-text-primary);
+  border-bottom-color: var(--framely-accent);
+}
+
+/* ─── Timeline panel ─── */
+.framely-timeline-panel {
+  flex-shrink: 0;
+  border-top: 1px solid var(--framely-border);
+}
+
+/* ─── Keyframe panel ─── */
+.framely-keyframe-panel {
+  flex-shrink: 0;
+  border-top: 1px solid var(--framely-border);
+}
+
+/* ─── Right Sidebar (props editor) ─── */
+.framely-right-panel {
+  width: var(--framely-right-panel-width);
+  background: var(--framely-bg-secondary);
+  border-left: 1px solid var(--framely-border);
+  overflow-y: auto;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Shortcuts ─── */
+.framely-shortcuts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.framely-shortcut {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--framely-text-muted);
+}
+
+.framely-shortcut kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 5px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 10px;
+  color: var(--framely-text-tertiary);
+}
+
+/* ─── Responsive Layout ─── */
+@media (max-width: 1200px) {
+  :root {
+    --framely-right-panel-width: 220px;
+  }
+}
+
+@media (max-width: 900px) {
+  .framely-editor-body {
+    flex-direction: column;
+  }
+
+  .framely-sidebar {
+    width: 100%;
+    max-height: 120px;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-right: none;
+    border-bottom: 1px solid var(--framely-border);
+  }
+
+  .framely-sidebar-section {
+    display: flex;
+    gap: 8px;
+    padding: 8px 16px;
+    flex-shrink: 0;
+    border-bottom: none;
+  }
+
+  .framely-sidebar-section:last-child {
+    display: none;
+  }
+
+  .framely-sidebar-label {
+    display: none;
+  }
+
+  .framely-right-panel {
+    width: 100%;
+    max-height: 200px;
+    border-left: none;
+    border-top: 1px solid var(--framely-border);
+  }
+}
+
+@media (max-width: 600px) {
+  .framely-sidebar {
+    display: none;
+  }
+
+  .framely-right-panel {
+    display: none;
+  }
+
+  .framely-header-actions {
+    gap: 4px;
+  }
+
+  .framely-render-btn,
+  .framely-share-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+}
+
+/* ─── Sidebar Header ─── */
+.framely-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--framely-border);
+}
+
+.framely-sidebar-header h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--framely-text-primary);
+}
+
+/* ─── Editor Actions Panel ─── */
+.framely-editor-actions {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.framely-editor-actions h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--framely-text-primary);
+}
+
+.framely-project-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.framely-project-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.framely-project-stat .label {
+  font-size: 12px;
+  color: var(--framely-text-muted);
+}
+
+.framely-project-stat .value {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--framely-text-primary);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+}
+
+.framely-editor-buttons {
+  display: flex;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--framely-border-subtle);
+}
+
+.framely-editor-buttons .framely-icon-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--framely-border);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--framely-text-secondary);
+}
+
+.framely-editor-buttons .framely-icon-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--framely-text-primary);
+}
+
+.framely-editor-export {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.framely-export-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--framely-text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.framely-export-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.framely-export-btn.primary {
+  background: var(--framely-accent-gradient);
+  border-color: transparent;
+}
+
+.framely-export-btn.primary:hover {
+  filter: brightness(1.1);
+}

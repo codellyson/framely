@@ -7,7 +7,7 @@ export default [
   js.configs.recommended,
   prettierConfig,
   {
-    files: ['frontend/src/**/*.{js,jsx}'],
+    files: ['packages/framely/src/**/*.{js,jsx,ts,tsx}', 'packages/cli/studio/**/*.{js,jsx,ts,tsx}'],
     plugins: {
       react: reactPlugin,
       'react-hooks': reactHooksPlugin,
@@ -52,7 +52,8 @@ export default [
     },
   },
   {
-    files: ['cli/**/*.js'],
+    files: ['packages/cli/**/*.js'],
+    ignores: ['packages/cli/studio/**'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',
@@ -73,6 +74,6 @@ export default [
     },
   },
   {
-    ignores: ['node_modules/', 'dist/', 'outputs/', '*.config.js'],
+    ignores: ['node_modules/', 'dist/', 'outputs/', '*.config.js', 'packages/create-framely/template/**'],
   },
 ];

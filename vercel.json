@@ -1,0 +1,6 @@
+{
+  "buildCommand": "pnpm --filter @framely/docs build",
+  "outputDirectory": "packages/docs/.vitepress/dist",
+  "installCommand": "pnpm install",
+  "framework": "vitepress"
+}

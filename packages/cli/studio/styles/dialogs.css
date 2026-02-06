@@ -1,0 +1,420 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Dialog Styles — Shared by RenderDialog & ExportDialog
+   Uses design system tokens from design-system.css
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Overlay ─── */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  font-family: var(--font-sans);
+  animation: dialog-fade-in var(--transition-fast) ease-out;
+}
+
+@keyframes dialog-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes dialog-slide-up {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ─── Panel ─── */
+.dialog-panel {
+  background: var(--zinc-900);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-xl);
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: dialog-slide-up var(--transition-base) ease-out;
+}
+
+/* ─── Header ─── */
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.dialog-title {
+  margin: 0;
+  color: var(--zinc-100);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.dialog-close-btn {
+  background: none;
+  border: none;
+  color: var(--zinc-500);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color var(--transition-fast);
+}
+
+.dialog-close-btn:hover {
+  color: var(--zinc-300);
+}
+
+.dialog-close-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+/* ─── Body ─── */
+.dialog-body {
+  padding: var(--space-5);
+}
+
+/* ─── Footer ─── */
+.dialog-footer {
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+}
+
+/* ─── Sections ─── */
+.dialog-section {
+  margin-bottom: var(--space-4);
+}
+
+.dialog-section:last-child {
+  margin-bottom: 0;
+}
+
+.dialog-label {
+  display: block;
+  color: var(--zinc-400);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-2);
+}
+
+/* ─── Info Card ─── */
+.dialog-info-card {
+  padding: var(--space-3);
+  background: var(--zinc-800);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-5);
+}
+
+.dialog-info-card-title {
+  color: var(--zinc-100);
+  font-weight: 500;
+  margin-bottom: var(--space-1);
+  font-size: var(--text-sm);
+}
+
+.dialog-info-card-subtitle {
+  color: var(--zinc-500);
+  font-size: var(--text-xs);
+}
+
+/* ─── Code Area (textarea / input) ─── */
+.dialog-code {
+  width: 100%;
+  padding: var(--space-3);
+  background: var(--zinc-800);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-lg);
+  color: var(--zinc-200);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.6;
+  resize: none;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.dialog-code:focus {
+  border-color: var(--indigo-500);
+}
+
+/* ─── Option Grid (codec / quality selectors) ─── */
+.dialog-option-grid {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.dialog-option-grid--3col {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.dialog-option-grid--4col {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.dialog-option-btn {
+  padding: var(--space-2);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-md);
+  color: var(--zinc-300);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  text-align: center;
+  transition: all var(--transition-fast);
+}
+
+.dialog-option-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dialog-option-btn.active {
+  background: linear-gradient(135deg, var(--indigo-500), var(--purple-600));
+  border-color: transparent;
+  color: white;
+  font-weight: 500;
+}
+
+.dialog-option-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.dialog-option-hint {
+  color: var(--zinc-600);
+  font-size: var(--text-xs);
+  margin-top: var(--space-1);
+}
+
+/* ─── Inputs ─── */
+.dialog-input {
+  padding: var(--space-2);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-md);
+  color: var(--zinc-100);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.dialog-input:focus {
+  border-color: var(--indigo-500);
+}
+
+.dialog-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Range input */
+.dialog-range {
+  width: 100%;
+  accent-color: var(--indigo-500);
+}
+
+.dialog-range-labels {
+  display: flex;
+  justify-content: space-between;
+  color: var(--zinc-600);
+  font-size: var(--text-xs);
+}
+
+/* Frame range row */
+.dialog-frame-range {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.dialog-frame-range .dialog-input {
+  flex: 1;
+}
+
+.dialog-frame-range-sep {
+  color: var(--zinc-600);
+  font-size: var(--text-sm);
+}
+
+/* Checkbox options */
+.dialog-checkbox-group {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.dialog-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--zinc-400);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.dialog-checkbox-label input[type="checkbox"] {
+  accent-color: var(--indigo-500);
+}
+
+/* ─── Alerts ─── */
+.dialog-alert {
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-xs);
+  margin-bottom: var(--space-4);
+  border: 1px solid;
+}
+
+.dialog-alert--error {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--error);
+}
+
+.dialog-alert--success {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.dialog-alert-title {
+  color: var(--success);
+  font-weight: 500;
+  margin-bottom: var(--space-1);
+}
+
+.dialog-alert-subtitle {
+  color: var(--zinc-500);
+  font-size: var(--text-xs);
+}
+
+.dialog-alert-link {
+  display: inline-block;
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--success);
+  border-radius: var(--radius-sm);
+  color: white;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  text-decoration: none;
+  transition: filter var(--transition-fast);
+}
+
+.dialog-alert-link:hover {
+  filter: brightness(1.1);
+  color: white;
+}
+
+/* ─── Progress Bar ─── */
+.dialog-progress {
+  margin-bottom: var(--space-4);
+}
+
+.dialog-progress-track {
+  height: 4px;
+  background: var(--zinc-800);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.dialog-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--indigo-500), var(--purple-500));
+  transition: width var(--transition-base);
+  border-radius: var(--radius-full);
+}
+
+.dialog-progress-text {
+  color: var(--zinc-500);
+  font-size: var(--text-xs);
+  text-align: center;
+  margin-top: var(--space-1);
+}
+
+/* ─── Buttons ─── */
+.dialog-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: 1;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.dialog-btn--primary {
+  background: linear-gradient(135deg, var(--indigo-500), var(--purple-600));
+  color: white;
+  padding: var(--space-3) var(--space-5);
+  font-size: var(--text-sm);
+  border-radius: var(--radius-lg);
+}
+
+.dialog-btn--primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+  box-shadow: 0 0 20px -5px var(--indigo-500);
+}
+
+.dialog-btn--primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dialog-btn--secondary {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--zinc-100);
+  padding: var(--space-3) var(--space-5);
+  font-size: var(--text-sm);
+  border-radius: var(--radius-lg);
+}
+
+.dialog-btn--secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.dialog-btn--secondary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dialog-btn--subtle {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--zinc-300);
+}
+
+.dialog-btn--subtle:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dialog-btn--success {
+  background: var(--success);
+  color: white;
+}
+
+.dialog-btn-row {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}

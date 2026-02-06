@@ -1,0 +1,51 @@
+{
+  "name": "framely",
+  "version": "0.1.0",
+  "description": "Programmatic video creation with React",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "devDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "@types/react": "^18.3.27",
+    "@types/react-dom": "^18.3.7",
+    "typescript": "^5.9.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/codellyson/framely.git",
+    "directory": "packages/framely"
+  },
+  "homepage": "https://github.com/codellyson/framely#readme",
+  "bugs": {
+    "url": "https://github.com/codellyson/framely/issues"
+  },
+  "author": "codellyson",
+  "keywords": [
+    "video",
+    "react",
+    "animation",
+    "rendering",
+    "composition",
+    "programmatic"
+  ],
+  "license": "MIT"
+}
