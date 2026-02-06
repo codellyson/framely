@@ -14,7 +14,7 @@ export function SlideTransition({
   textColor = '#ffffff',
 }) {
   const frame = useCurrentFrame();
-  const { fps, width, height, durationInFrames } = useVideoConfig();
+  const { fps, width, durationInFrames } = useVideoConfig();
 
   const midpoint = durationInFrames / 2;
   const progress = frame / durationInFrames;
@@ -31,7 +31,7 @@ export function SlideTransition({
     const springValue = isOutgoing ? transitionSpring : 1 - transitionSpring;
 
     switch (transitionType) {
-      case 'slide':
+      case 'slide': {
         const slideOffset = interpolate(springValue, [0, 1], [0, 100]);
         if (direction === 'left') {
           return isOutgoing
@@ -50,8 +50,9 @@ export function SlideTransition({
             ? `translateY(${slideOffset}%)`
             : `translateY(${-100 + slideOffset}%)`;
         }
+      }
 
-      case 'zoom':
+      case 'zoom': {
         const zoomScale = isOutgoing
           ? interpolate(springValue, [0, 1], [1, 0.5])
           : interpolate(springValue, [0, 1], [1.5, 1]);
@@ -59,14 +60,16 @@ export function SlideTransition({
           ? interpolate(springValue, [0, 1], [1, 0])
           : interpolate(springValue, [0, 1], [0, 1]);
         return { transform: `scale(${zoomScale})`, opacity: zoomOpacity };
+      }
 
-      case 'fade':
+      case 'fade': {
         const fadeOpacity = isOutgoing
           ? interpolate(springValue, [0, 1], [1, 0])
           : interpolate(springValue, [0, 1], [0, 1]);
         return { opacity: fadeOpacity };
+      }
 
-      case 'flip':
+      case 'flip': {
         const flipRotation = isOutgoing
           ? interpolate(springValue, [0, 1], [0, -90])
           : interpolate(springValue, [0, 1], [90, 0]);
@@ -75,6 +78,7 @@ export function SlideTransition({
           transform: `perspective(1000px) rotateY(${flipRotation}deg)`,
           opacity: flipOpacity,
         };
+      }
 
       default:
         return {};
@@ -85,7 +89,7 @@ export function SlideTransition({
   const incomingTransform = getTransform(false);
 
   // Slide content component
-  const SlideContent = ({ content, style, isActive }) => (
+  const SlideContent = ({ content, style }) => (
     <div
       style={{
         position: 'absolute',

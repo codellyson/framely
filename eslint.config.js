@@ -1,4 +1,5 @@
 import js from '@eslint/js';
+import tseslint from 'typescript-eslint';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import prettierConfig from 'eslint-config-prettier';
@@ -6,8 +7,95 @@ import prettierConfig from 'eslint-config-prettier';
 export default [
   js.configs.recommended,
   prettierConfig,
+  // TypeScript files (core lib + studio .ts/.tsx)
   {
-    files: ['packages/framely/src/**/*.{js,jsx,ts,tsx}', 'packages/cli/studio/**/*.{js,jsx,ts,tsx}'],
+    files: ['packages/framely/src/**/*.{ts,tsx}', 'packages/cli/studio/**/*.{ts,tsx}'],
+    plugins: {
+      '@typescript-eslint': tseslint.plugin,
+      react: reactPlugin,
+      'react-hooks': reactHooksPlugin,
+    },
+    languageOptions: {
+      parser: tseslint.parser,
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      parserOptions: {
+        ecmaFeatures: { jsx: true },
+      },
+      globals: {
+        window: 'readonly',
+        document: 'readonly',
+        navigator: 'readonly',
+        console: 'readonly',
+        fetch: 'readonly',
+        URL: 'readonly',
+        URLSearchParams: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        requestAnimationFrame: 'readonly',
+        cancelAnimationFrame: 'readonly',
+        ResizeObserver: 'readonly',
+        HTMLElement: 'readonly',
+        HTMLDivElement: 'readonly',
+        HTMLInputElement: 'readonly',
+        HTMLAnchorElement: 'readonly',
+        HTMLTextAreaElement: 'readonly',
+        HTMLAudioElement: 'readonly',
+        KeyboardEvent: 'readonly',
+        AudioContext: 'readonly',
+        AnalyserNode: 'readonly',
+        MediaElementAudioSourceNode: 'readonly',
+        ReadableStreamDefaultReader: 'readonly',
+        TextDecoder: 'readonly',
+        Response: 'readonly',
+        React: 'readonly',
+        Audio: 'readonly',
+        Image: 'readonly',
+        Blob: 'readonly',
+        NodeListOf: 'readonly',
+        AbortSignal: 'readonly',
+        HTMLImageElement: 'readonly',
+        HTMLVideoElement: 'readonly',
+        HTMLLinkElement: 'readonly',
+        HTMLIFrameElement: 'readonly',
+        SVGSVGElement: 'readonly',
+        SVGCircleElement: 'readonly',
+        SVGEllipseElement: 'readonly',
+        SVGLineElement: 'readonly',
+        SVGPathElement: 'readonly',
+        SVGPolygonElement: 'readonly',
+        SVGRectElement: 'readonly',
+        SVGGeometryElement: 'readonly',
+        FontFace: 'readonly',
+        FontFaceDescriptors: 'readonly',
+        JSX: 'readonly',
+        TransitionSeries: 'readonly',
+        Event: 'readonly',
+        CustomEvent: 'readonly',
+        HTMLSelectElement: 'readonly',
+        AbortController: 'readonly',
+        performance: 'readonly',
+      },
+    },
+    settings: {
+      react: { version: '18' },
+    },
+    rules: {
+      'react/react-in-jsx-scope': 'off',
+      'react/prop-types': 'off',
+      'react/jsx-uses-vars': 'error',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      'no-console': 'off',
+    },
+  },
+  // JSX files (studio components)
+  {
+    files: ['packages/framely/src/**/*.{js,jsx}', 'packages/cli/studio/**/*.{js,jsx}'],
     plugins: {
       react: reactPlugin,
       'react-hooks': reactHooksPlugin,
@@ -45,12 +133,14 @@ export default [
     rules: {
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
+      'react/jsx-uses-vars': 'error',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       'no-console': 'off',
     },
   },
+  // CLI command files (Node.js)
   {
     files: ['packages/cli/**/*.js'],
     ignores: ['packages/cli/studio/**'],
@@ -65,7 +155,10 @@ export default [
         Buffer: 'readonly',
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
+        clearInterval: 'readonly',
+        setInterval: 'readonly',
         TextDecoder: 'readonly',
+        window: 'readonly',
       },
     },
     rules: {
@@ -74,6 +167,6 @@ export default [
     },
   },
   {
-    ignores: ['node_modules/', 'dist/', 'outputs/', '*.config.js', 'packages/create-framely/template/**'],
+    ignores: ['**/node_modules/', '**/dist/', 'outputs/', '*.config.js', 'packages/create-framely/**', 'packages/docs/**', '**/*.d.ts'],
   },
 ];

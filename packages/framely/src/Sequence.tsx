@@ -39,11 +39,6 @@ export function Sequence({
   // Calculate the child's local frame
   const localFrame: number = parent.frame - from;
 
-  // Don't render if we're outside this sequence's range
-  if (localFrame < 0 || localFrame >= actualDuration) {
-    return null;
-  }
-
   const contextValue: TimelineContextValue = useMemo(
     () => ({
       ...parent,
@@ -65,6 +60,11 @@ export function Sequence({
           ...style,
         }
       : style;
+
+  // Don't render if we're outside this sequence's range
+  if (localFrame < 0 || localFrame >= actualDuration) {
+    return null;
+  }
 
   return (
     <TimelineContext.Provider value={contextValue}>

@@ -99,7 +99,7 @@ export async function closeBrowser(browser) {
   if (browser) {
     try {
       await browser.close();
-    } catch (e) {
+    } catch {
       // Ignore close errors
     }
   }
@@ -172,7 +172,7 @@ export async function setFrame(page, frame, timeout = DEFAULT_TIMEOUT) {
         },
         { timeout }
       );
-    } catch (e) {
+    } catch {
       // Continue even if delayRender check fails
     }
   }

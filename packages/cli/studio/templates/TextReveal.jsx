@@ -10,7 +10,7 @@ export function TextReveal({
   backgroundColor = '#000000',
 }) {
   const frame = useCurrentFrame();
-  const { fps, width } = useVideoConfig();
+  const { width } = useVideoConfig();
 
   const characters = text.split('');
   const charDelay = 3; // frames between each character

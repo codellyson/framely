@@ -10,7 +10,7 @@ export function InstagramStory({
   textColor = '#ffffff',
 }) {
   const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const { fps, width } = useVideoConfig();
 
   // Background pulse
   const bgPulse = 1 + Math.sin(frame * 0.1) * 0.02;

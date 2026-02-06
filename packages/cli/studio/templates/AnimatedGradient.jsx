@@ -1,4 +1,4 @@
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate } from 'framely';
+import { AbsoluteFill, useCurrentFrame, useVideoConfig } from 'framely';
 
 /**
  * Animated Gradient Background Template
@@ -9,7 +9,7 @@ export function AnimatedGradient({
   angle = 45,
 }) {
   const frame = useCurrentFrame();
-  const { fps, durationInFrames } = useVideoConfig();
+  const { fps } = useVideoConfig();
 
   // Continuous animation that loops
   const progress = (frame * speed) / fps;

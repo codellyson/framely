@@ -110,13 +110,13 @@ export function RenderDialog({
 }: RenderDialogProps): ReactElement | null {
   const [codec, setCodec] = useState<string>('h264');
   const [quality, setQuality] = useState<string>('high');
-  const [customCrf, setCustomCrf] = useState<number>(18);
+  const [customCrf, _setCustomCrf] = useState<number>(18);
   const [scale, setScale] = useState<number>(1);
   const [startFrame, setStartFrame] = useState<number>(0);
   const [endFrame, setEndFrame] = useState<number>(composition?.durationInFrames ? composition.durationInFrames - 1 : 299);
   const [muted, setMuted] = useState<boolean>(false);
   const [parallel, setParallel] = useState<boolean>(false);
-  const [concurrency, setConcurrency] = useState<number>(4);
+  const [_concurrency, _setConcurrency] = useState<number>(4);
 
   const [rendering, setRendering] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);

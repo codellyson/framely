@@ -338,15 +338,6 @@ export function Text({
     style,
   ]);
 
-  // If no children function, render simple text
-  if (typeof children !== 'function') {
-    return (
-      <div className={className} style={baseStyle}>
-        {text}
-      </div>
-    );
-  }
-
   // Split text and create character data with Span components
   const charData: CharData[] = useMemo(() => {
     const chars = splitText(text);
@@ -356,6 +347,15 @@ export function Text({
       Span: createCharSpan(c, baseStyle),
     }));
   }, [text, baseStyle]);
+
+  // If no children function, render simple text
+  if (typeof children !== 'function') {
+    return (
+      <div className={className} style={baseStyle}>
+        {text}
+      </div>
+    );
+  }
 
   return (
     <div

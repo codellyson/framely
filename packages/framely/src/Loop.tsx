@@ -87,11 +87,6 @@ export function Loop({
   const iteration: number = Math.floor(parent.frame / durationInFrames);
   const localFrame: number = parent.frame % durationInFrames;
 
-  // Check if we've exceeded the number of loops
-  if (times !== Infinity && iteration >= times) {
-    return null;
-  }
-
   const contextValue = useMemo(
     () => ({
       ...parent,
@@ -120,6 +115,11 @@ export function Loop({
           ...style,
         }
       : style;
+
+  // Check if we've exceeded the number of loops
+  if (times !== Infinity && iteration >= times) {
+    return null;
+  }
 
   return (
     <LoopContext.Provider value={loopValue}>

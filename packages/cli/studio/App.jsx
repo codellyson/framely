@@ -1,10 +1,43 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { TimelineProvider } from 'framely';
-import { getCompositions } from 'framely';
+import { TimelineProvider, getCompositions } from 'framely';
 import { CompositionsView } from './CompositionsView';
 import { getTemplateComponent } from './templates';
 import './styles/design-system.css';
 import './App.css';
+
+/**
+ * Render mode — bare composition at native resolution.
+ * The renderer controls frames via window.__setFrame()
+ */
+function RenderView({ composition, inputProps = {} }) {
+  const { component: Component, width, height, fps, durationInFrames, defaultProps } = composition;
+
+  // Merge defaultProps with inputProps (inputProps take priority)
+  const finalProps = { ...defaultProps, ...inputProps };
+
+  return (
+    <div
+      id="render-container"
+      style={{
+        width,
+        height,
+        position: 'relative',
+        overflow: 'hidden',
+        background: '#000',
+      }}
+    >
+      <TimelineProvider
+        fps={fps}
+        width={width}
+        height={height}
+        durationInFrames={durationInFrames}
+        renderMode={true}
+      >
+        <Component {...finalProps} />
+      </TimelineProvider>
+    </div>
+  );
+}
 
 /**
  * Framely - Programmatic Video Framework
@@ -18,7 +51,8 @@ function App() {
 
   // Parse props from URL for render mode
   const urlProps = useMemo(() => {
-    const propsParam = params.get('props');
+    const searchParams = new URLSearchParams(window.location.search);
+    const propsParam = searchParams.get('props');
     if (propsParam) {
       try {
         return JSON.parse(decodeURIComponent(propsParam));
@@ -144,40 +178,6 @@ function App() {
         onSelectComposition={setSelectedCompositionId}
         onUseTemplate={handleUseTemplate}
       />
-    </div>
-  );
-}
-
-/**
- * Render mode — bare composition at native resolution.
- * The renderer controls frames via window.__setFrame()
- */
-function RenderView({ composition, inputProps = {} }) {
-  const { component: Component, width, height, fps, durationInFrames, defaultProps } = composition;
-
-  // Merge defaultProps with inputProps (inputProps take priority)
-  const finalProps = { ...defaultProps, ...inputProps };
-
-  return (
-    <div
-      id="render-container"
-      style={{
-        width,
-        height,
-        position: 'relative',
-        overflow: 'hidden',
-        background: '#000',
-      }}
-    >
-      <TimelineProvider
-        fps={fps}
-        width={width}
-        height={height}
-        durationInFrames={durationInFrames}
-        renderMode={true}
-      >
-        <Component {...finalProps} />
-      </TimelineProvider>
     </div>
   );
 }

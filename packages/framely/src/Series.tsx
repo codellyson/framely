@@ -142,11 +142,6 @@ Series.Sequence = function SeriesSequence({
   // Calculate the child's local frame
   const localFrame: number = parent.frame - from;
 
-  // Don't render if we're outside this sequence's range
-  if (localFrame < 0 || localFrame >= actualDuration) {
-    return null;
-  }
-
   const contextValue = useMemo(
     () => ({
       ...parent,
@@ -167,6 +162,11 @@ Series.Sequence = function SeriesSequence({
           ...style,
         }
       : style;
+
+  // Don't render if we're outside this sequence's range
+  if (localFrame < 0 || localFrame >= actualDuration) {
+    return null;
+  }
 
   return (
     <TimelineContext.Provider value={contextValue}>

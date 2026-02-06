@@ -133,9 +133,9 @@ export async function renderSequence({
   outputDir,
   startFrame,
   endFrame,
-  width,
-  height,
-  fps,
+  _width,
+  _height,
+  _fps,
   imageFormat = 'png',
   quality = 80,
   onProgress,
@@ -341,7 +341,7 @@ export async function renderVideoParallel({
   codec = 'h264',
   crf = 18,
   concurrency = 2,
-  muted = false,
+  _muted = false,
   onProgress,
 }) {
   const totalFrames = endFrame - startFrame + 1;

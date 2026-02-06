@@ -39,7 +39,7 @@ export async function compositionsCommand(options) {
       await page.waitForFunction('window.__ready === true || window.__FRAMELY_COMPOSITIONS', {
         timeout: 10000,
       });
-    } catch (e) {
+    } catch {
       // May not have ready flag in some setups
     }
 
@@ -71,7 +71,7 @@ export async function compositionsCommand(options) {
           const data = await response.json();
           compositions.push(...(data.compositions || []));
         }
-      } catch (e) {
+      } catch {
         // API might not be running
       }
     }

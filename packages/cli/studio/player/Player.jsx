@@ -1,8 +1,5 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
-import { TimelineProvider, useTimeline } from 'framely';
-import { Sequence } from 'framely';
-import { Video } from 'framely';
-import { Img } from 'framely';
+import { TimelineProvider, useTimeline, Sequence, Video, Img } from 'framely';
 import './Player.css';
 
 /**
@@ -62,8 +59,8 @@ export function PlayerView({
     playing,
     setFrame,
     toggle,
-    play,
-    pause,
+    play: _play,
+    pause: _pause,
   } = useTimeline();
 
   const containerRef = useRef(null);

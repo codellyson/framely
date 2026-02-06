@@ -1,4 +1,3 @@
-/* global window */
 /**
  * Preview Command
  *
@@ -11,7 +10,6 @@
  *   framely preview --no-open
  */
 
-import { spawn } from 'child_process';
 import http from 'http';
 import path from 'path';
 import fs from 'fs';
@@ -163,7 +161,7 @@ function parseBody(req) {
     req.on('end', () => {
       try {
         resolve(JSON.parse(Buffer.concat(chunks).toString()));
-      } catch (e) {
+      } catch {
         reject(new Error('Invalid JSON'));
       }
     });
@@ -256,7 +254,7 @@ async function handleRender(req, res, frontendUrl, outputsDir) {
   let body;
   try {
     body = await parseBody(req);
-  } catch (e) {
+  } catch {
     res.writeHead(400, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'Invalid request body' }));
     return;
@@ -370,7 +368,7 @@ async function handleStill(req, res, frontendUrl, outputsDir) {
   let body;
   try {
     body = await parseBody(req);
-  } catch (e) {
+  } catch {
     res.writeHead(400, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'Invalid request body' }));
     return;

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { TimelineProvider } from 'framely';
+import { TimelineProvider, getCompositionTree } from 'framely';
 import { PlayerView } from './player/Player';
-import { getCompositionTree } from 'framely';
 import { RenderDialog } from './RenderDialog';
 import { ExportDialog } from './ShareDialog';
 import { TemplatesMarketplace } from './templates';

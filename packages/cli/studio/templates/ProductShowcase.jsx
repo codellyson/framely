@@ -13,12 +13,6 @@ export function ProductShowcase({
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
 
-  // Scene 1: Product reveal (frames 0-60)
-  const scene1 = frame < 60;
-
-  // Background animation
-  const bgScale = interpolate(frame, [0, 30], [1.2, 1], { extrapolateRight: 'clamp' });
-
   // Product placeholder (circle representing product)
   const productSpring = spring({ frame, fps, config: { damping: 12, stiffness: 100 } });
   const productScale = interpolate(productSpring, [0, 1], [0, 1]);

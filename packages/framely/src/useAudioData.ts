@@ -5,7 +5,7 @@
  * for creating audio-reactive animations.
  */
 
-import { useState, useEffect, useRef, useCallback, RefObject } from 'react';
+import { useState, useEffect, useRef, RefObject } from 'react';
 import { useTimeline } from './context';
 
 /**
