@@ -52,5 +52,5 @@ export function HelloWorld() {
 Click the "Render" button in the studio, or use the CLI:
 
 ```bash
-npx framely render hello-world --output video.mp4
+npx framely render hello-world video.mp4
 ```

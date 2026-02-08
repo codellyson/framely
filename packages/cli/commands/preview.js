@@ -401,22 +401,18 @@ async function handleStill(req, res, frontendUrl, outputsDir) {
     await page.goto(renderUrl.toString(), { waitUntil: 'domcontentloaded' });
     await page.waitForFunction('window.__ready === true', { timeout: 30000 });
 
-    // Set frame and wait for React to commit
-    await page.evaluate(async (f) => { await window.__setFrame(f); }, frame);
-    await page.waitForFunction(
-      (f) => {
-        const rendered = window.__renderedFrame;
-        const dur = window.__compositionDurationInFrames || Infinity;
-        const expected = Math.max(0, Math.min(f, dur - 1));
-        return rendered === expected;
-      },
-      frame,
-      { timeout: 30000 }
-    );
-    await page.waitForFunction(() => {
+    // Set frame and check delayRender in one roundtrip (flushSync commits synchronously)
+    const hasPendingDelays = await page.evaluate((f) => {
+      window.__setFrame(f);
       const dr = window.__FRAMELY_DELAY_RENDER;
-      return !dr || dr.pendingCount === 0;
-    }, { timeout: 30000 });
+      return !!(dr && dr.pendingCount > 0);
+    }, frame);
+    if (hasPendingDelays) {
+      await page.waitForFunction(() => {
+        const dr = window.__FRAMELY_DELAY_RENDER;
+        return !dr || dr.pendingCount === 0;
+      }, { timeout: 30000 });
+    }
 
     // Capture
     const element = page.locator('#render-container');
@@ -836,12 +832,12 @@ export async function previewCommand(options) {
 
   const reactDir = tryResolve('react');
   const reactDomDir = tryResolve('react-dom');
-  const framelyDir = tryResolve('framely');
+  const framelyDir = tryResolve('@codellyson/framely');
 
   const aliases = [];
   if (reactDir) aliases.push({ find: 'react', replacement: reactDir });
   if (reactDomDir) aliases.push({ find: 'react-dom', replacement: reactDomDir });
-  if (framelyDir) aliases.push({ find: 'framely', replacement: framelyDir });
+  if (framelyDir) aliases.push({ find: '@codellyson/framely', replacement: framelyDir });
 
   // Create Vite dev server with the studio plugin
   const server = await createViteServer({
@@ -875,11 +871,11 @@ export async function previewCommand(options) {
       },
     },
     optimizeDeps: {
-      include: ['react', 'react-dom', 'react-dom/client', 'react/jsx-runtime', 'framely'],
+      include: ['react', 'react-dom', 'react-dom/client', 'react/jsx-runtime', '@codellyson/framely'],
     },
     resolve: {
       alias: aliases,
-      dedupe: ['react', 'react-dom'],
+      dedupe: ['react', 'react-dom', '@codellyson/framely'],
     },
   });
 

@@ -5,8 +5,10 @@ import {
   useCallback,
   useRef,
   useEffect,
+  useLayoutEffect,
   type ReactNode,
 } from 'react';
+import { flushSync } from 'react-dom';
 
 // ─── Interfaces ──────────────────────────────────────────────────────────────
 
@@ -69,10 +71,9 @@ export interface TimelineProviderProps {
 
 declare global {
   interface Window {
-    __setFrame?: (frame: number) => Promise<void>;
+    __setFrame?: (frame: number) => void;
     __ready?: boolean;
     __renderedFrame?: number;
-    __frameResolve?: (() => void) | null;
     __compositionWidth?: number;
     __compositionHeight?: number;
     __compositionFps?: number;
@@ -142,32 +143,23 @@ export function TimelineProvider({
     [durationInFrames, onFrameChange]
   );
 
-  // In render mode, signal to the CLI that React has committed the current frame.
-  // useEffect fires after the DOM has been updated, making this a reliable signal.
-  useEffect(() => {
+  // In render mode, track the committed frame for diagnostics.
+  // useLayoutEffect fires synchronously during commit (before paint),
+  // so __renderedFrame is always in sync after flushSync returns.
+  useLayoutEffect(() => {
     if (renderMode) {
       window.__renderedFrame = frame;
-      if (window.__frameResolve) {
-        window.__frameResolve();
-        window.__frameResolve = null;
-      }
     }
   }, [renderMode, frame]);
 
   // Expose setFrame globally for the renderer (Playwright calls this)
   useEffect(() => {
     if (renderMode) {
-      window.__setFrame = (f: number): Promise<void> => {
-        return new Promise<void>((resolve) => {
-          const clamped = Math.max(0, Math.min(f, durationInFrames - 1));
-          // If already on this frame, resolve immediately
-          if (window.__renderedFrame === clamped) {
-            resolve();
-            return;
-          }
-          // Store the resolve callback — the useEffect above will call it
-          // once React commits the new frame to the DOM
-          window.__frameResolve = resolve;
+      // flushSync forces React to commit synchronously.
+      // After __setFrame returns, the DOM is fully updated and
+      // useLayoutEffect has set __renderedFrame to the new value.
+      window.__setFrame = (f: number): void => {
+        flushSync(() => {
           setFrame(f);
         });
       };
@@ -184,7 +176,6 @@ export function TimelineProvider({
         delete window.__setFrame;
         delete window.__ready;
         delete window.__renderedFrame;
-        delete window.__frameResolve;
         delete window.__compositionWidth;
         delete window.__compositionHeight;
         delete window.__compositionFps;

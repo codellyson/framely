@@ -31,17 +31,17 @@ Lower CRF = higher quality = larger file size.
 
 ```bash
 # Default H.264
-npx framely render my-video --output video.mp4
+npx framely render my-video video.mp4
 
 # High quality H.265
-npx framely render my-video --codec h265 --crf 15 --output hq.mp4
+npx framely render my-video hq.mp4 --codec h265 --crf 15
 
 # WebM for web
-npx framely render my-video --codec vp9 --output web.webm
+npx framely render my-video web.webm --codec vp9
 
 # Animated GIF
-npx framely render my-video --codec gif --output animation.gif
+npx framely render my-video animation.gif --codec gif
 
 # ProRes for editing
-npx framely render my-video --codec prores --output edit.mov
+npx framely render my-video edit.mov --codec prores
 ```

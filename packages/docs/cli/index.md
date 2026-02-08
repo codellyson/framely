@@ -26,10 +26,10 @@ npm install @codellyson/framely-cli
 npx framely preview
 
 # Render a video
-npx framely render my-video --output video.mp4
+npx framely render my-video video.mp4
 
 # Render a still frame
-npx framely still my-video --output frame.png --frame 60
+npx framely still my-video frame.png --frame 60
 
 # List compositions
 npx framely compositions
