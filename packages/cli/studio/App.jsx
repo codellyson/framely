@@ -47,8 +47,6 @@ function RenderView({ composition, inputProps = {} }) {
 function App() {
   const params = new URLSearchParams(window.location.search);
   const renderMode = params.get('renderMode') === 'true';
-  const initialCompositionId = params.get('composition') || null;
-
   // Parse props from URL for render mode
   const urlProps = useMemo(() => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -63,7 +61,6 @@ function App() {
     return {};
   }, []);
 
-  const [selectedCompositionId, setSelectedCompositionId] = useState(initialCompositionId);
   const [templateCompositions, setTemplateCompositions] = useState({});
 
   // Load all code-defined compositions
@@ -76,20 +73,22 @@ function App() {
     return obj;
   }, []);
 
+  // Lazy initializer: resolve from URL param or first registered composition
+  const [selectedCompositionId, setSelectedCompositionId] = useState(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const fromUrl = searchParams.get('composition');
+    if (fromUrl) return fromUrl;
+    // getCompositions() is synchronous — registerRoot runs before App mounts
+    const map = getCompositions();
+    if (map.size > 0) return map.keys().next().value;
+    return null;
+  });
+
   // Merge code compositions with template compositions
   const compositions = useMemo(() => ({
     ...codeCompositions,
     ...templateCompositions,
   }), [codeCompositions, templateCompositions]);
-
-  // Auto-select the first composition when none is selected or selection is invalid
-  useEffect(() => {
-    if (selectedCompositionId && compositions[selectedCompositionId]) return;
-    const ids = Object.keys(compositions);
-    if (ids.length > 0) {
-      setSelectedCompositionId(ids[0]);
-    }
-  }, [compositions, selectedCompositionId]);
 
   // Handle using a template from the marketplace
   const handleUseTemplate = useCallback((template, customId, customProps) => {

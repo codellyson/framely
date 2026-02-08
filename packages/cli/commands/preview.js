@@ -401,8 +401,18 @@ async function handleStill(req, res, frontendUrl, outputsDir) {
     await page.goto(renderUrl.toString(), { waitUntil: 'domcontentloaded' });
     await page.waitForFunction('window.__ready === true', { timeout: 30000 });
 
-    // Set frame
+    // Set frame and wait for React to commit
     await page.evaluate(async (f) => { await window.__setFrame(f); }, frame);
+    await page.waitForFunction(
+      (f) => {
+        const rendered = window.__renderedFrame;
+        const dur = window.__compositionDurationInFrames || Infinity;
+        const expected = Math.max(0, Math.min(f, dur - 1));
+        return rendered === expected;
+      },
+      frame,
+      { timeout: 30000 }
+    );
     await page.waitForFunction(() => {
       const dr = window.__FRAMELY_DELAY_RENDER;
       return !dr || dr.pendingCount === 0;

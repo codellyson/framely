@@ -71,6 +71,8 @@ declare global {
   interface Window {
     __setFrame?: (frame: number) => Promise<void>;
     __ready?: boolean;
+    __renderedFrame?: number;
+    __frameResolve?: (() => void) | null;
     __compositionWidth?: number;
     __compositionHeight?: number;
     __compositionFps?: number;
@@ -140,18 +142,33 @@ export function TimelineProvider({
     [durationInFrames, onFrameChange]
   );
 
+  // In render mode, signal to the CLI that React has committed the current frame.
+  // useEffect fires after the DOM has been updated, making this a reliable signal.
+  useEffect(() => {
+    if (renderMode) {
+      window.__renderedFrame = frame;
+      if (window.__frameResolve) {
+        window.__frameResolve();
+        window.__frameResolve = null;
+      }
+    }
+  }, [renderMode, frame]);
+
   // Expose setFrame globally for the renderer (Playwright calls this)
   useEffect(() => {
     if (renderMode) {
       window.__setFrame = (f: number): Promise<void> => {
         return new Promise<void>((resolve) => {
+          const clamped = Math.max(0, Math.min(f, durationInFrames - 1));
+          // If already on this frame, resolve immediately
+          if (window.__renderedFrame === clamped) {
+            resolve();
+            return;
+          }
+          // Store the resolve callback — the useEffect above will call it
+          // once React commits the new frame to the DOM
+          window.__frameResolve = resolve;
           setFrame(f);
-          // Wait for React to render the new frame
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              resolve();
-            });
-          });
         });
       };
       // Expose composition metadata for the CLI renderer
@@ -161,10 +178,13 @@ export function TimelineProvider({
       window.__compositionDurationInFrames = durationInFrames;
       // Initialize audio tracks array for Audio components to register into
       window.__FRAMELY_AUDIO_TRACKS = [];
+      window.__renderedFrame = initialFrame;
       window.__ready = true;
       return () => {
         delete window.__setFrame;
         delete window.__ready;
+        delete window.__renderedFrame;
+        delete window.__frameResolve;
         delete window.__compositionWidth;
         delete window.__compositionHeight;
         delete window.__compositionFps;
@@ -172,7 +192,7 @@ export function TimelineProvider({
         delete window.__FRAMELY_AUDIO_TRACKS;
       };
     }
-  }, [renderMode, setFrame, width, height, fps, durationInFrames]);
+  }, [renderMode, setFrame, width, height, fps, durationInFrames, initialFrame]);
 
   // Playback loop
   useEffect(() => {
