@@ -1,6 +1,6 @@
 {
   "name": "@codellyson/framely-cli",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "CLI for Framely - programmatic video creation with React",
   "type": "module",
   "bin": {
