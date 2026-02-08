@@ -46,7 +46,7 @@ The renderer captures each frame as an image and stitches them together into a v
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
-│                    CLI (@framely/cli)                        │
+│                    CLI (@codellyson/framely-cli)              │
 │                                                             │
 │  Playwright (headless Chromium)                             │
 │       │  screenshots each frame as JPEG                     │

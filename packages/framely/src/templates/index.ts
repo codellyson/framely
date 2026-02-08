@@ -1,7 +1,5 @@
 /**
- * Templates Marketplace API
+ * Templates types
  */
 
 export * from './types';
-export { templatesApi } from './api';
-export { MOCK_TEMPLATES } from './mockData';

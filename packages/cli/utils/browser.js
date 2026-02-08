@@ -155,9 +155,9 @@ export const DEFAULT_TIMEOUT = 30000;
  * @param {number} [timeout=30000] - Timeout in ms for delayRender
  */
 export async function setFrame(page, frame, timeout = DEFAULT_TIMEOUT) {
-  // Set frame and check delayRender in a single evaluate round-trip
-  const hasDelayRender = await page.evaluate((f) => {
-    window.__setFrame(f);
+  // Set frame (awaiting the 2-rAF promise) and check delayRender in a single evaluate round-trip
+  const hasDelayRender = await page.evaluate(async (f) => {
+    await window.__setFrame(f);
     const dr = window.__FRAMELY_DELAY_RENDER;
     return dr && dr.pendingCount > 0;
   }, frame);

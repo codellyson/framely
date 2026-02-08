@@ -1,13 +1,13 @@
 # CLI Overview
 
-The `@framely/cli` package provides commands for previewing and rendering your video compositions.
+The `@codellyson/framely-cli` package provides commands for previewing and rendering your video compositions.
 
 ## Installation
 
 The CLI is included when you scaffold a project with `create-framely`. You can also install it manually:
 
 ```bash
-npm install @framely/cli
+npm install @codellyson/framely-cli
 ```
 
 ## Commands

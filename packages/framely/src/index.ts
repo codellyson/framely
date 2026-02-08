@@ -246,8 +246,7 @@ export type { ErrorBoundaryProps, ErrorBoundaryState } from './ErrorBoundary';
 export { Player, Thumbnail } from './Player';
 export type { PlayerTimelineContextValue, PlayerProps, ThumbnailProps } from './Player';
 
-// Templates marketplace
-export { templatesApi } from './templates/api';
+// Templates types (marketplace runtime code moved to CLI)
 export { CATEGORY_LABELS } from './templates/types';
 export type {
   Template,

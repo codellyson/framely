@@ -47,7 +47,7 @@ function RenderView({ composition, inputProps = {} }) {
 function App() {
   const params = new URLSearchParams(window.location.search);
   const renderMode = params.get('renderMode') === 'true';
-  const initialCompositionId = params.get('composition') || 'sample-video';
+  const initialCompositionId = params.get('composition') || null;
 
   // Parse props from URL for render mode
   const urlProps = useMemo(() => {
@@ -81,6 +81,15 @@ function App() {
     ...codeCompositions,
     ...templateCompositions,
   }), [codeCompositions, templateCompositions]);
+
+  // Auto-select the first composition when none is selected or selection is invalid
+  useEffect(() => {
+    if (selectedCompositionId && compositions[selectedCompositionId]) return;
+    const ids = Object.keys(compositions);
+    if (ids.length > 0) {
+      setSelectedCompositionId(ids[0]);
+    }
+  }, [compositions, selectedCompositionId]);
 
   // Handle using a template from the marketplace
   const handleUseTemplate = useCallback((template, customId, customProps) => {

@@ -39,7 +39,7 @@ npx framely render my-video --start-frame 0 --end-frame 60
 ## Programmatic Rendering
 
 ```js
-import { renderMedia } from 'framely/renderer';
+import { renderMedia } from '@codellyson/framely/renderer';
 
 await renderMedia({
   compositionId: 'my-video',

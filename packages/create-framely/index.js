@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const templateDir = path.join(__dirname, 'template');
 
-const projectName = process.argv[2];
+let projectName = process.argv[2];
 
 if (!projectName) {
   console.error('Usage: create-framely <project-name>');
@@ -15,11 +15,22 @@ if (!projectName) {
   process.exit(1);
 }
 
-const targetDir = path.resolve(process.cwd(), projectName);
+// When "." is specified, scaffold into the current directory
+const useCurrentDir = projectName === '.';
+if (useCurrentDir) {
+  projectName = path.basename(process.cwd());
+}
 
-if (fs.existsSync(targetDir)) {
-  console.error(`Error: Directory "${projectName}" already exists.`);
-  process.exit(1);
+const targetDir = useCurrentDir ? process.cwd() : path.resolve(process.cwd(), projectName);
+
+if (fs.existsSync(targetDir) && !useCurrentDir) {
+  const entries = fs.readdirSync(targetDir);
+  const meaningful = entries.filter(e => !e.startsWith('.'));
+  if (meaningful.length > 0 && !process.argv.includes('--force')) {
+    console.error(`Error: Directory "${projectName}" is not empty.`);
+    console.error('Use --force to scaffold into a non-empty directory.');
+    process.exit(1);
+  }
 }
 
 /**
@@ -48,6 +59,8 @@ console.log(`\nCreating a new Framely project in ${targetDir}\n`);
 copyDir(templateDir, targetDir);
 
 console.log('Done! To get started:\n');
-console.log(`  cd ${projectName}`);
+if (!useCurrentDir) {
+  console.log(`  cd ${projectName}`);
+}
 console.log('  npm install');
 console.log('  npx framely preview\n');

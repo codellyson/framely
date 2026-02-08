@@ -18,7 +18,7 @@ This creates a new project with a sample composition and opens the studio.
 If you prefer to set up manually:
 
 ```bash
-npm install framely @framely/cli react react-dom
+npm install @codellyson/framely @codellyson/framely-cli react react-dom
 ```
 
 Then create an entry file that registers your compositions:

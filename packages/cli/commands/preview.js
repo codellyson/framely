@@ -402,7 +402,7 @@ async function handleStill(req, res, frontendUrl, outputsDir) {
     await page.waitForFunction('window.__ready === true', { timeout: 30000 });
 
     // Set frame
-    await page.evaluate((f) => { window.__setFrame(f); }, frame);
+    await page.evaluate(async (f) => { await window.__setFrame(f); }, frame);
     await page.waitForFunction(() => {
       const dr = window.__FRAMELY_DELAY_RENDER;
       return !dr || dr.pendingCount === 0;
