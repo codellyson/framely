@@ -1,0 +1,16 @@
+{
+  "id": "presentation-1",
+  "name": "Slide Transition Pack",
+  "description": "Collection of smooth slide transitions for presentations.",
+  "category": "presentation",
+  "tags": ["presentation", "slides", "transition", "corporate"],
+  "preview": { "thumbnail": "https://images.unsplash.com/photo-1531538606174-0f90ff5dce83?w=400&h=225&fit=crop" },
+  "author": { "name": "Slide Pro", "verified": false },
+  "version": "1.1.0",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "durationInFrames": 60,
+  "defaultProps": { "transitionType": "slide", "direction": "left" },
+  "component": "SlideTransition"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "instagram-story",
+  "name": "Story Template",
+  "description": "Trendy Instagram story template with animated stickers and text effects.",
+  "category": "social-media",
+  "tags": ["instagram", "story", "social", "trendy"],
+  "preview": { "thumbnail": "https://images.unsplash.com/photo-1611262588024-d12430b98920?w=400&h=225&fit=crop" },
+  "author": { "name": "Social Creator", "verified": true },
+  "version": "1.0.0",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "durationInFrames": 150,
+  "defaultProps": { "headline": "New Post!", "backgroundColor": "#f472b6" },
+  "component": "InstagramStory"
+}

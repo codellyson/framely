@@ -17,6 +17,9 @@ if (nodeVersion[0] < 18) {
  *   framely still <composition-id> [output]  - Render a single frame as image
  *   framely preview                          - Start the preview server
  *   framely compositions                     - List available compositions
+ *   framely templates list                   - List available templates
+ *   framely templates install <package>      - Install a template package
+ *   framely templates remove <package>       - Remove a template package
  */
 
 import { program } from 'commander';
@@ -24,6 +27,7 @@ import { renderCommand } from './commands/render.js';
 import { stillCommand } from './commands/still.js';
 import { previewCommand } from './commands/preview.js';
 import { compositionsCommand } from './commands/compositions.js';
+import { templatesListCommand, templatesInstallCommand, templatesRemoveCommand } from './commands/templates.js';
 
 program
   .name('framely')
@@ -89,5 +93,25 @@ program
   .option('--json', 'Output as JSON')
   .option('--frontend-url <url>', 'Frontend URL', 'http://localhost:3000')
   .action(compositionsCommand);
+
+// ─── Templates Command ───────────────────────────────────────────────────────
+const templates = program
+  .command('templates')
+  .description('Manage Framely templates from the registry');
+
+templates
+  .command('list')
+  .description('List available templates from the registry')
+  .action(templatesListCommand);
+
+templates
+  .command('install <package>')
+  .description('Install a template package')
+  .action(templatesInstallCommand);
+
+templates
+  .command('remove <package>')
+  .description('Remove an installed template package')
+  .action(templatesRemoveCommand);
 
 program.parse();

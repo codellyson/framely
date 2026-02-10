@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { TimelineProvider, getCompositions } from '@codellyson/framely';
 import { CompositionsView } from './CompositionsView';
-import { getTemplateComponent } from './templates';
+import { getTemplateComponent } from 'virtual:framely-templates';
 import './styles/design-system.css';
 import './App.css';
 

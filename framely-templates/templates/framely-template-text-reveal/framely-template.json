@@ -1,0 +1,16 @@
+{
+  "id": "text-reveal-1",
+  "name": "Kinetic Text Reveal",
+  "description": "Dynamic text reveal with character-by-character animation.",
+  "category": "text-animations",
+  "tags": ["text", "kinetic", "reveal", "typography"],
+  "preview": { "thumbnail": "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400&h=225&fit=crop" },
+  "author": { "name": "Type Master", "verified": false },
+  "version": "1.0.0",
+  "width": 1920,
+  "height": 1080,
+  "fps": 60,
+  "durationInFrames": 180,
+  "defaultProps": { "text": "Your text here", "fontSize": 120, "color": "#ffffff" },
+  "component": "TextReveal"
+}

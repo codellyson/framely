@@ -1,0 +1,16 @@
+{
+  "id": "lower-third-1",
+  "name": "Clean Lower Third",
+  "description": "Professional lower third with smooth slide-in animation.",
+  "category": "lower-thirds",
+  "tags": ["lower-third", "professional", "news"],
+  "preview": { "thumbnail": "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=400&h=225&fit=crop" },
+  "author": { "name": "Motion Pro", "verified": true },
+  "version": "1.2.0",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "durationInFrames": 150,
+  "defaultProps": { "name": "John Doe", "title": "CEO & Founder", "accentColor": "#3b82f6" },
+  "component": "LowerThird"
+}

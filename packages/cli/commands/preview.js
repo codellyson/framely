@@ -16,140 +16,17 @@ import fs from 'fs';
 import chalk from 'chalk';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
+import { spawn } from 'child_process';
 import { createBrowser, closeBrowser } from '../utils/browser.js';
 import { renderVideo } from '../utils/render.js';
 import { getCodecConfig } from '../utils/codecs.js';
+import { fetchRegistry, getRegistryUrl } from '../utils/registry.js';
+import { discoverInstalledTemplates, mergeWithRegistry, generateVirtualModule } from '../utils/discover.js';
+import { detectPackageManager } from './templates.js';
 import { createServer as createViteServer } from 'vite';
 import react from '@vitejs/plugin-react';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-/**
- * Mock templates data for the marketplace API
- * In production, this would come from a database
- */
-const MOCK_TEMPLATES = [
-  {
-    id: 'social-intro-1',
-    name: 'Modern Social Intro',
-    description: 'Clean, modern intro animation perfect for social media videos.',
-    category: 'intro-outro',
-    tags: ['intro', 'social', 'modern', 'minimal'],
-    preview: { thumbnail: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&h=225&fit=crop' },
-    author: { id: 'framely', name: 'Framely Team', verified: true },
-    bundleUrl: 'https://cdn.framely.dev/templates/social-intro-1/bundle.js',
-    version: '1.0.0',
-    width: 1080, height: 1920, fps: 30, durationInFrames: 90,
-    defaultProps: { title: 'Your Title Here', subtitle: 'Subtitle text', accentColor: '#6366f1' },
-    downloads: 1250, rating: 4.8, featured: true,
-    createdAt: '2024-01-15T00:00:00Z', updatedAt: '2024-01-20T00:00:00Z',
-  },
-  {
-    id: 'youtube-subscribe',
-    name: 'Subscribe Animation',
-    description: 'Eye-catching subscribe button animation with bell notification.',
-    category: 'social-media',
-    tags: ['youtube', 'subscribe', 'animation', 'cta'],
-    preview: { thumbnail: 'https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=400&h=225&fit=crop' },
-    author: { id: 'framely', name: 'Framely Team', verified: true },
-    bundleUrl: 'https://cdn.framely.dev/templates/youtube-subscribe/bundle.js',
-    version: '1.0.0',
-    width: 1920, height: 1080, fps: 30, durationInFrames: 120,
-    defaultProps: { channelName: 'Your Channel', buttonColor: '#FF0000', showBell: true },
-    downloads: 2340, rating: 4.9, featured: true,
-    createdAt: '2024-01-10T00:00:00Z', updatedAt: '2024-01-18T00:00:00Z',
-  },
-  {
-    id: 'lower-third-1',
-    name: 'Clean Lower Third',
-    description: 'Professional lower third with smooth slide-in animation.',
-    category: 'lower-thirds',
-    tags: ['lower-third', 'professional', 'news'],
-    preview: { thumbnail: 'https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=400&h=225&fit=crop' },
-    author: { id: 'motion-pro', name: 'Motion Pro', verified: true },
-    bundleUrl: 'https://cdn.framely.dev/templates/lower-third-1/bundle.js',
-    version: '1.2.0',
-    width: 1920, height: 1080, fps: 30, durationInFrames: 150,
-    defaultProps: { name: 'John Doe', title: 'CEO & Founder', accentColor: '#3b82f6' },
-    downloads: 890, rating: 4.6, featured: false,
-    createdAt: '2024-01-08T00:00:00Z', updatedAt: '2024-01-15T00:00:00Z',
-  },
-  {
-    id: 'text-reveal-1',
-    name: 'Kinetic Text Reveal',
-    description: 'Dynamic text reveal with character-by-character animation.',
-    category: 'text-animations',
-    tags: ['text', 'kinetic', 'reveal', 'typography'],
-    preview: { thumbnail: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400&h=225&fit=crop' },
-    author: { id: 'type-master', name: 'Type Master', verified: false },
-    bundleUrl: 'https://cdn.framely.dev/templates/text-reveal-1/bundle.js',
-    version: '1.0.0',
-    width: 1920, height: 1080, fps: 60, durationInFrames: 180,
-    defaultProps: { text: 'Your text here', fontSize: 120, color: '#ffffff' },
-    downloads: 1567, rating: 4.7, featured: false,
-    createdAt: '2024-01-05T00:00:00Z', updatedAt: '2024-01-12T00:00:00Z',
-  },
-  {
-    id: 'gradient-bg-1',
-    name: 'Animated Gradient',
-    description: 'Mesmerizing animated gradient background with smooth color transitions.',
-    category: 'backgrounds',
-    tags: ['background', 'gradient', 'animated', 'loop'],
-    preview: { thumbnail: 'https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=400&h=225&fit=crop' },
-    author: { id: 'framely', name: 'Framely Team', verified: true },
-    bundleUrl: 'https://cdn.framely.dev/templates/gradient-bg-1/bundle.js',
-    version: '1.0.0',
-    width: 1920, height: 1080, fps: 30, durationInFrames: 300,
-    defaultProps: { colors: ['#6366f1', '#8b5cf6', '#d946ef'], speed: 1 },
-    downloads: 3210, rating: 4.5, featured: false,
-    createdAt: '2024-01-03T00:00:00Z', updatedAt: '2024-01-10T00:00:00Z',
-  },
-  {
-    id: 'promo-slide-1',
-    name: 'Product Showcase',
-    description: 'Professional product showcase template with dynamic transitions.',
-    category: 'marketing',
-    tags: ['product', 'showcase', 'promo', 'ecommerce'],
-    preview: { thumbnail: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=225&fit=crop' },
-    author: { id: 'ad-studio', name: 'Ad Studio', verified: true },
-    bundleUrl: 'https://cdn.framely.dev/templates/promo-slide-1/bundle.js',
-    version: '2.0.0',
-    width: 1080, height: 1080, fps: 30, durationInFrames: 180,
-    defaultProps: { productName: 'Product Name', price: '$99.99', brandColor: '#10b981' },
-    downloads: 756, rating: 4.4, featured: true,
-    createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-08T00:00:00Z',
-  },
-  {
-    id: 'presentation-1',
-    name: 'Slide Transition Pack',
-    description: 'Collection of smooth slide transitions for presentations.',
-    category: 'presentation',
-    tags: ['presentation', 'slides', 'transition', 'corporate'],
-    preview: { thumbnail: 'https://images.unsplash.com/photo-1531538606174-0f90ff5dce83?w=400&h=225&fit=crop' },
-    author: { id: 'slide-pro', name: 'Slide Pro', verified: false },
-    bundleUrl: 'https://cdn.framely.dev/templates/presentation-1/bundle.js',
-    version: '1.1.0',
-    width: 1920, height: 1080, fps: 30, durationInFrames: 60,
-    defaultProps: { transitionType: 'slide', direction: 'left' },
-    downloads: 445, rating: 4.3, featured: false,
-    createdAt: '2023-12-28T00:00:00Z', updatedAt: '2024-01-05T00:00:00Z',
-  },
-  {
-    id: 'instagram-story',
-    name: 'Story Template',
-    description: 'Trendy Instagram story template with animated stickers and text effects.',
-    category: 'social-media',
-    tags: ['instagram', 'story', 'social', 'trendy'],
-    preview: { thumbnail: 'https://images.unsplash.com/photo-1611262588024-d12430b98920?w=400&h=225&fit=crop' },
-    author: { id: 'social-creator', name: 'Social Creator', verified: true },
-    bundleUrl: 'https://cdn.framely.dev/templates/instagram-story/bundle.js',
-    version: '1.0.0',
-    width: 1080, height: 1920, fps: 30, durationInFrames: 150,
-    defaultProps: { headline: 'New Post!', backgroundColor: '#f472b6' },
-    downloads: 1890, rating: 4.6, featured: false,
-    createdAt: '2023-12-25T00:00:00Z', updatedAt: '2024-01-02T00:00:00Z',
-  },
-];
 
 /**
  * Parse JSON request body.
@@ -175,9 +52,12 @@ function parseBody(req) {
  * @param {number} apiPort - Port to listen on
  * @param {string} frontendUrl - Frontend URL for loading compositions
  * @param {string} outputsDir - Directory to store rendered files
+ * @param {string} publicDir - Public assets directory
+ * @param {string} projectDir - User's project directory
+ * @param {object} [templateState] - Shared template state for HMR invalidation
  * @returns {http.Server}
  */
-export function startRenderApi(apiPort, frontendUrl, outputsDir, publicDir) {
+export function startRenderApi(apiPort, frontendUrl, outputsDir, publicDir, projectDir, templateState) {
   fs.mkdirSync(outputsDir, { recursive: true });
 
   const server = http.createServer((req, res) => {
@@ -210,22 +90,34 @@ export function startRenderApi(apiPort, frontendUrl, outputsDir, publicDir) {
       return;
     }
 
+    // POST /api/templates/install — install a template package
+    if (req.method === 'POST' && req.url === '/api/templates/install') {
+      handleTemplateInstall(req, res, projectDir, templateState);
+      return;
+    }
+
+    // POST /api/templates/remove — remove a template package
+    if (req.method === 'POST' && req.url === '/api/templates/remove') {
+      handleTemplateRemove(req, res, projectDir, templateState);
+      return;
+    }
+
     // GET /api/templates/categories — list template categories
     if (req.method === 'GET' && req.url === '/api/templates/categories') {
-      handleTemplateCategories(req, res);
+      handleTemplateCategories(req, res, projectDir);
       return;
     }
 
     // GET /api/templates/:id — get single template
     if (req.method === 'GET' && req.url.match(/^\/api\/templates\/[^/]+$/)) {
       const id = req.url.replace('/api/templates/', '');
-      handleGetTemplate(req, res, id);
+      handleGetTemplate(req, res, id, projectDir);
       return;
     }
 
     // GET /api/templates — list templates with filters
     if (req.method === 'GET' && req.url.startsWith('/api/templates')) {
-      handleListTemplates(req, res);
+      handleListTemplates(req, res, projectDir);
       return;
     }
 
@@ -547,9 +439,21 @@ function handleOutputFile(req, res, outputsDir) {
 }
 
 /**
+ * Get the merged template list (registry + installed).
+ */
+async function getMergedTemplates(projectDir) {
+  const registryUrl = getRegistryUrl(projectDir);
+  const [registry, installed] = await Promise.all([
+    fetchRegistry(registryUrl),
+    Promise.resolve(discoverInstalledTemplates(projectDir)),
+  ]);
+  return mergeWithRegistry(installed, registry);
+}
+
+/**
  * Handle GET /api/templates — list templates with filters.
  */
-function handleListTemplates(req, res) {
+async function handleListTemplates(req, res, projectDir) {
   const url = new URL(req.url, `http://localhost`);
   const category = url.searchParams.get('category');
   const search = url.searchParams.get('search');
@@ -558,77 +462,227 @@ function handleListTemplates(req, res) {
   const page = parseInt(url.searchParams.get('page') || '1', 10);
   const pageSize = parseInt(url.searchParams.get('pageSize') || '12', 10);
 
-  let filtered = [...MOCK_TEMPLATES];
+  try {
+    let filtered = await getMergedTemplates(projectDir);
 
-  // Filter by category
-  if (category) {
-    filtered = filtered.filter(t => t.category === category);
+    // Filter by category
+    if (category) {
+      filtered = filtered.filter(t => t.category === category);
+    }
+
+    // Filter by search
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filtered = filtered.filter(t =>
+        t.name.toLowerCase().includes(searchLower) ||
+        t.description.toLowerCase().includes(searchLower) ||
+        (t.tags && t.tags.some(tag => tag.toLowerCase().includes(searchLower)))
+      );
+    }
+
+    // Filter by featured
+    if (featured === 'true') {
+      filtered = filtered.filter(t => t.featured);
+    }
+
+    // Sort
+    if (sortBy === 'popular') {
+      filtered.sort((a, b) => (b.downloads || 0) - (a.downloads || 0));
+    } else if (sortBy === 'rating') {
+      filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    } else {
+      // newest
+      filtered.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    }
+
+    // Paginate
+    const start = (page - 1) * pageSize;
+    const templates = filtered.slice(start, start + pageSize);
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      templates,
+      total: filtered.length,
+      page,
+      pageSize,
+      hasMore: start + pageSize < filtered.length,
+    }));
+  } catch (err) {
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: err.message }));
   }
-
-  // Filter by search
-  if (search) {
-    const searchLower = search.toLowerCase();
-    filtered = filtered.filter(t =>
-      t.name.toLowerCase().includes(searchLower) ||
-      t.description.toLowerCase().includes(searchLower) ||
-      t.tags.some(tag => tag.toLowerCase().includes(searchLower))
-    );
-  }
-
-  // Filter by featured
-  if (featured === 'true') {
-    filtered = filtered.filter(t => t.featured);
-  }
-
-  // Sort
-  if (sortBy === 'popular') {
-    filtered.sort((a, b) => (b.downloads || 0) - (a.downloads || 0));
-  } else if (sortBy === 'rating') {
-    filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-  } else {
-    // newest
-    filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  }
-
-  // Paginate
-  const start = (page - 1) * pageSize;
-  const templates = filtered.slice(start, start + pageSize);
-
-  res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({
-    templates,
-    total: filtered.length,
-    page,
-    pageSize,
-    hasMore: start + pageSize < filtered.length,
-  }));
 }
 
 /**
  * Handle GET /api/templates/:id — get single template.
  */
-function handleGetTemplate(req, res, id) {
-  const template = MOCK_TEMPLATES.find(t => t.id === id);
-  if (!template) {
-    res.writeHead(404, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Template not found' }));
-    return;
+async function handleGetTemplate(req, res, id, projectDir) {
+  try {
+    const templates = await getMergedTemplates(projectDir);
+    const template = templates.find(t => t.id === id);
+    if (!template) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Template not found' }));
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(template));
+  } catch (err) {
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: err.message }));
   }
-  res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify(template));
 }
 
 /**
  * Handle GET /api/templates/categories — list categories with counts.
  */
-function handleTemplateCategories(req, res) {
-  const counts = {};
-  MOCK_TEMPLATES.forEach(t => {
-    counts[t.category] = (counts[t.category] || 0) + 1;
+async function handleTemplateCategories(req, res, projectDir) {
+  try {
+    const templates = await getMergedTemplates(projectDir);
+    const counts = {};
+    templates.forEach(t => {
+      if (t.category) {
+        counts[t.category] = (counts[t.category] || 0) + 1;
+      }
+    });
+    const categories = Object.entries(counts).map(([category, count]) => ({ category, count }));
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(categories));
+  } catch (err) {
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: err.message }));
+  }
+}
+
+/**
+ * Handle POST /api/templates/install — install a template package.
+ * Streams NDJSON progress events.
+ */
+async function handleTemplateInstall(req, res, projectDir, templateState) {
+  let body;
+  try {
+    body = await parseBody(req);
+  } catch {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Invalid request body' }));
+    return;
+  }
+
+  const packageName = body.package;
+  if (!packageName) {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Missing "package" field' }));
+    return;
+  }
+
+  const pm = detectPackageManager(projectDir);
+  const installCmd = pm === 'yarn' ? 'add' : 'install';
+
+  res.writeHead(200, {
+    'Content-Type': 'application/x-ndjson',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
   });
-  const categories = Object.entries(counts).map(([category, count]) => ({ category, count }));
-  res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify(categories));
+
+  function sendEvent(data) {
+    res.write(JSON.stringify(data) + '\n');
+  }
+
+  sendEvent({ type: 'start', package: packageName, pm });
+
+  const proc = spawn(pm, [installCmd, packageName], { cwd: projectDir, stdio: ['ignore', 'pipe', 'pipe'] });
+
+  proc.stdout.on('data', (chunk) => {
+    sendEvent({ type: 'log', stream: 'stdout', text: chunk.toString() });
+  });
+
+  proc.stderr.on('data', (chunk) => {
+    sendEvent({ type: 'log', stream: 'stderr', text: chunk.toString() });
+  });
+
+  proc.on('close', (code) => {
+    if (code === 0) {
+      // Re-discover templates and invalidate virtual module
+      if (templateState && templateState.invalidate) {
+        templateState.installed = discoverInstalledTemplates(projectDir);
+        templateState.invalidate();
+      }
+      sendEvent({ type: 'complete', package: packageName });
+    } else {
+      sendEvent({ type: 'error', message: `${pm} ${installCmd} ${packageName} exited with code ${code}` });
+    }
+    res.end();
+  });
+
+  proc.on('error', (err) => {
+    sendEvent({ type: 'error', message: err.message });
+    res.end();
+  });
+}
+
+/**
+ * Handle POST /api/templates/remove — remove a template package.
+ * Streams NDJSON progress events.
+ */
+async function handleTemplateRemove(req, res, projectDir, templateState) {
+  let body;
+  try {
+    body = await parseBody(req);
+  } catch {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Invalid request body' }));
+    return;
+  }
+
+  const packageName = body.package;
+  if (!packageName) {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Missing "package" field' }));
+    return;
+  }
+
+  const pm = detectPackageManager(projectDir);
+  const removeCmd = pm === 'yarn' ? 'remove' : 'uninstall';
+
+  res.writeHead(200, {
+    'Content-Type': 'application/x-ndjson',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+  });
+
+  function sendEvent(data) {
+    res.write(JSON.stringify(data) + '\n');
+  }
+
+  sendEvent({ type: 'start', package: packageName, pm });
+
+  const proc = spawn(pm, [removeCmd, packageName], { cwd: projectDir, stdio: ['ignore', 'pipe', 'pipe'] });
+
+  proc.stdout.on('data', (chunk) => {
+    sendEvent({ type: 'log', stream: 'stdout', text: chunk.toString() });
+  });
+
+  proc.stderr.on('data', (chunk) => {
+    sendEvent({ type: 'log', stream: 'stderr', text: chunk.toString() });
+  });
+
+  proc.on('close', (code) => {
+    if (code === 0) {
+      if (templateState && templateState.invalidate) {
+        templateState.installed = discoverInstalledTemplates(projectDir);
+        templateState.invalidate();
+      }
+      sendEvent({ type: 'complete', package: packageName });
+    } else {
+      sendEvent({ type: 'error', message: `${pm} ${removeCmd} ${packageName} exited with code ${code}` });
+    }
+    res.end();
+  });
+
+  proc.on('error', (err) => {
+    sendEvent({ type: 'error', message: err.message });
+    res.end();
+  });
 }
 
 /**
@@ -655,14 +709,28 @@ function findUserEntry(projectDir) {
  * Combines the user's entry file (which calls registerRoot()) with
  * the studio UI bootstrap code.
  */
-function framelyStudioPlugin(userEntryPath, studioDir) {
+function framelyStudioPlugin(userEntryPath, studioDir, templateState) {
   const VIRTUAL_ENTRY_ID = 'virtual:framely-entry';
   const RESOLVED_VIRTUAL_ENTRY_ID = '\0' + VIRTUAL_ENTRY_ID;
+
+  const VIRTUAL_TEMPLATES_ID = 'virtual:framely-templates';
+  const RESOLVED_VIRTUAL_TEMPLATES_ID = '\0' + VIRTUAL_TEMPLATES_ID;
 
   return {
     name: 'framely-studio',
 
     configureServer(server) {
+      // Set up HMR invalidation for the virtual templates module
+      if (templateState) {
+        templateState.invalidate = () => {
+          const mod = server.moduleGraph.getModuleById(RESOLVED_VIRTUAL_TEMPLATES_ID);
+          if (mod) {
+            server.moduleGraph.invalidateModule(mod);
+            server.ws.send({ type: 'full-reload' });
+          }
+        };
+      }
+
       // Serve a virtual index.html for the root route
       server.middlewares.use(async (req, res, next) => {
         const urlPath = req.url.split('?')[0];
@@ -690,6 +758,7 @@ function framelyStudioPlugin(userEntryPath, studioDir) {
 
     resolveId(id) {
       if (id === VIRTUAL_ENTRY_ID) return RESOLVED_VIRTUAL_ENTRY_ID;
+      if (id === VIRTUAL_TEMPLATES_ID) return RESOLVED_VIRTUAL_TEMPLATES_ID;
     },
 
     load(id) {
@@ -712,6 +781,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   React.createElement(React.StrictMode, null, React.createElement(App))
 );
 `;
+      }
+
+      if (id === RESOLVED_VIRTUAL_TEMPLATES_ID) {
+        const installed = templateState ? templateState.installed : [];
+        return generateVirtualModule(installed);
       }
     },
   };
@@ -806,15 +880,20 @@ export async function previewCommand(options) {
   const outputsDir = path.resolve(projectDir, 'outputs');
   const publicDir = path.resolve(projectDir, 'public');
 
+  // Discover installed template packages
+  const installed = discoverInstalledTemplates(projectDir);
+  const templateState = { installed, invalidate: null };
+
   console.log(chalk.white('  Project:   '), chalk.gray(projectDir));
   console.log(chalk.white('  Entry:     '), chalk.gray(path.relative(projectDir, userEntry)));
+  console.log(chalk.white('  Templates: '), chalk.gray(`${installed.length} installed`));
   console.log(chalk.white('  Port:      '), chalk.yellow(String(port)));
   console.log(chalk.white('  URL:       '), chalk.green(`http://localhost:${port}`));
   console.log('');
 
   // Start the render API
   const frontendUrl = `http://localhost:${port}`;
-  const apiServer = startRenderApi(apiPort, frontendUrl, outputsDir, publicDir);
+  const apiServer = startRenderApi(apiPort, frontendUrl, outputsDir, publicDir, projectDir, templateState);
 
   console.log(chalk.cyan('  Starting studio...\n'));
 
@@ -844,7 +923,7 @@ export async function previewCommand(options) {
     root: projectDir,
     plugins: [
       react(),
-      framelyStudioPlugin(userEntry, studioDir),
+      framelyStudioPlugin(userEntry, studioDir, templateState),
       assetsApiPlugin(publicDir),
     ],
     server: {
@@ -857,6 +936,14 @@ export async function previewCommand(options) {
           changeOrigin: true,
         },
         '/api/still': {
+          target: `http://localhost:${apiPort}`,
+          changeOrigin: true,
+        },
+        '/api/templates/install': {
+          target: `http://localhost:${apiPort}`,
+          changeOrigin: true,
+        },
+        '/api/templates/remove': {
           target: `http://localhost:${apiPort}`,
           changeOrigin: true,
         },

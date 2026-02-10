@@ -18,8 +18,8 @@ export type TemplateCategory =
  * Template author information
  */
 export interface TemplateAuthor {
-  id: string;
   name: string;
+  github?: string;
   avatar?: string;
   verified?: boolean;
 }
@@ -54,8 +54,8 @@ export interface Template {
   preview: TemplatePreview;
   /** Template author */
   author: TemplateAuthor;
-  /** Remote bundle URL for the component */
-  bundleUrl: string;
+  /** npm package name (e.g. @framely-templates/social-intro) */
+  package?: string;
   /** Template version */
   version: string;
   /** Video width */
@@ -68,6 +68,10 @@ export interface Template {
   durationInFrames: number;
   /** Default props for the template */
   defaultProps: Record<string, unknown>;
+  /** Whether this template is installed locally */
+  installed?: boolean;
+  /** Installed version (may differ from registry version) */
+  installedVersion?: string;
   /** Downloads count */
   downloads?: number;
   /** Average rating (1-5) */
@@ -75,9 +79,43 @@ export interface Template {
   /** Featured flag */
   featured?: boolean;
   /** Creation date */
-  createdAt: string;
+  createdAt?: string;
   /** Last update date */
-  updatedAt: string;
+  updatedAt?: string;
+}
+
+/**
+ * Metadata stored in a template package's framely-template.json
+ */
+export interface TemplatePackageMeta {
+  id: string;
+  name: string;
+  description: string;
+  category: TemplateCategory;
+  tags: string[];
+  preview: TemplatePreview;
+  author: TemplateAuthor;
+  width: number;
+  height: number;
+  fps: number;
+  durationInFrames: number;
+  defaultProps: Record<string, unknown>;
+}
+
+/**
+ * A template entry in the GitHub registry
+ */
+export interface RegistryTemplate extends Template {
+  /** npm package name — required in registry entries */
+  package: string;
+}
+
+/**
+ * Shape of the GitHub-hosted registry.json
+ */
+export interface RegistrySchema {
+  version: number;
+  templates: RegistryTemplate[];
 }
 
 /**

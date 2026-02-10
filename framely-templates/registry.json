@@ -1,0 +1,229 @@
+{
+  "version": 1,
+  "templates": [
+    {
+      "id": "social-intro-1",
+      "name": "Modern Social Intro",
+      "description": "Clean, modern intro animation perfect for social media videos.",
+      "category": "intro-outro",
+      "tags": ["intro", "social", "modern", "minimal"],
+      "preview": {
+        "thumbnail": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&h=225&fit=crop"
+      },
+      "author": {
+        "name": "Framely Team",
+        "github": "codellyson",
+        "verified": true
+      },
+      "package": "@codellyson/framely-template-social-intro",
+      "version": "1.0.0",
+      "width": 1080,
+      "height": 1920,
+      "fps": 30,
+      "durationInFrames": 90,
+      "defaultProps": {
+        "title": "Your Title Here",
+        "subtitle": "Subtitle text",
+        "accentColor": "#6366f1"
+      },
+      "downloads": 1250,
+      "rating": 4.8,
+      "featured": true
+    },
+    {
+      "id": "youtube-subscribe",
+      "name": "Subscribe Animation",
+      "description": "Eye-catching subscribe button animation with bell notification.",
+      "category": "social-media",
+      "tags": ["youtube", "subscribe", "animation", "cta"],
+      "preview": {
+        "thumbnail": "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=400&h=225&fit=crop"
+      },
+      "author": {
+        "name": "Framely Team",
+        "github": "codellyson",
+        "verified": true
+      },
+      "package": "@codellyson/framely-template-subscribe-animation",
+      "version": "1.0.0",
+      "width": 1920,
+      "height": 1080,
+      "fps": 30,
+      "durationInFrames": 120,
+      "defaultProps": {
+        "channelName": "Your Channel",
+        "buttonColor": "#FF0000",
+        "showBell": true
+      },
+      "downloads": 2340,
+      "rating": 4.9,
+      "featured": true
+    },
+    {
+      "id": "lower-third-1",
+      "name": "Clean Lower Third",
+      "description": "Professional lower third with smooth slide-in animation.",
+      "category": "lower-thirds",
+      "tags": ["lower-third", "professional", "news"],
+      "preview": {
+        "thumbnail": "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=400&h=225&fit=crop"
+      },
+      "author": {
+        "name": "Motion Pro",
+        "verified": true
+      },
+      "package": "@codellyson/framely-template-lower-third",
+      "version": "1.2.0",
+      "width": 1920,
+      "height": 1080,
+      "fps": 30,
+      "durationInFrames": 150,
+      "defaultProps": {
+        "name": "John Doe",
+        "title": "CEO & Founder",
+        "accentColor": "#3b82f6"
+      },
+      "downloads": 890,
+      "rating": 4.6,
+      "featured": false
+    },
+    {
+      "id": "text-reveal-1",
+      "name": "Kinetic Text Reveal",
+      "description": "Dynamic text reveal with character-by-character animation.",
+      "category": "text-animations",
+      "tags": ["text", "kinetic", "reveal", "typography"],
+      "preview": {
+        "thumbnail": "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400&h=225&fit=crop"
+      },
+      "author": {
+        "name": "Type Master",
+        "verified": false
+      },
+      "package": "@codellyson/framely-template-text-reveal",
+      "version": "1.0.0",
+      "width": 1920,
+      "height": 1080,
+      "fps": 60,
+      "durationInFrames": 180,
+      "defaultProps": {
+        "text": "Your text here",
+        "fontSize": 120,
+        "color": "#ffffff"
+      },
+      "downloads": 1567,
+      "rating": 4.7,
+      "featured": false
+    },
+    {
+      "id": "gradient-bg-1",
+      "name": "Animated Gradient",
+      "description": "Mesmerizing animated gradient background with smooth color transitions.",
+      "category": "backgrounds",
+      "tags": ["background", "gradient", "animated", "loop"],
+      "preview": {
+        "thumbnail": "https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=400&h=225&fit=crop"
+      },
+      "author": {
+        "name": "Framely Team",
+        "github": "codellyson",
+        "verified": true
+      },
+      "package": "@codellyson/framely-template-animated-gradient",
+      "version": "1.0.0",
+      "width": 1920,
+      "height": 1080,
+      "fps": 30,
+      "durationInFrames": 300,
+      "defaultProps": {
+        "colors": ["#6366f1", "#8b5cf6", "#d946ef"],
+        "speed": 1
+      },
+      "downloads": 3210,
+      "rating": 4.5,
+      "featured": false
+    },
+    {
+      "id": "promo-slide-1",
+      "name": "Product Showcase",
+      "description": "Professional product showcase template with dynamic transitions.",
+      "category": "marketing",
+      "tags": ["product", "showcase", "promo", "ecommerce"],
+      "preview": {
+        "thumbnail": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=225&fit=crop"
+      },
+      "author": {
+        "name": "Ad Studio",
+        "verified": true
+      },
+      "package": "@codellyson/framely-template-product-showcase",
+      "version": "2.0.0",
+      "width": 1080,
+      "height": 1080,
+      "fps": 30,
+      "durationInFrames": 180,
+      "defaultProps": {
+        "productName": "Product Name",
+        "price": "$99.99",
+        "brandColor": "#10b981"
+      },
+      "downloads": 756,
+      "rating": 4.4,
+      "featured": true
+    },
+    {
+      "id": "presentation-1",
+      "name": "Slide Transition Pack",
+      "description": "Collection of smooth slide transitions for presentations.",
+      "category": "presentation",
+      "tags": ["presentation", "slides", "transition", "corporate"],
+      "preview": {
+        "thumbnail": "https://images.unsplash.com/photo-1531538606174-0f90ff5dce83?w=400&h=225&fit=crop"
+      },
+      "author": {
+        "name": "Slide Pro",
+        "verified": false
+      },
+      "package": "@codellyson/framely-template-slide-transition",
+      "version": "1.1.0",
+      "width": 1920,
+      "height": 1080,
+      "fps": 30,
+      "durationInFrames": 60,
+      "defaultProps": {
+        "transitionType": "slide",
+        "direction": "left"
+      },
+      "downloads": 445,
+      "rating": 4.3,
+      "featured": false
+    },
+    {
+      "id": "instagram-story",
+      "name": "Story Template",
+      "description": "Trendy Instagram story template with animated stickers and text effects.",
+      "category": "social-media",
+      "tags": ["instagram", "story", "social", "trendy"],
+      "preview": {
+        "thumbnail": "https://images.unsplash.com/photo-1611262588024-d12430b98920?w=400&h=225&fit=crop"
+      },
+      "author": {
+        "name": "Social Creator",
+        "verified": true
+      },
+      "package": "@codellyson/framely-template-instagram-story",
+      "version": "1.0.0",
+      "width": 1080,
+      "height": 1920,
+      "fps": 30,
+      "durationInFrames": 150,
+      "defaultProps": {
+        "headline": "New Post!",
+        "backgroundColor": "#f472b6"
+      },
+      "downloads": 1890,
+      "rating": 4.6,
+      "featured": false
+    }
+  ]
+}

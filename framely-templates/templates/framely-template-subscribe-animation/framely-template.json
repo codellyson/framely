@@ -1,0 +1,16 @@
+{
+  "id": "youtube-subscribe",
+  "name": "Subscribe Animation",
+  "description": "Eye-catching subscribe button animation with bell notification.",
+  "category": "social-media",
+  "tags": ["youtube", "subscribe", "animation", "cta"],
+  "preview": { "thumbnail": "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=400&h=225&fit=crop" },
+  "author": { "name": "Framely Team", "github": "codellyson", "verified": true },
+  "version": "1.0.0",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "durationInFrames": 120,
+  "defaultProps": { "channelName": "Your Channel", "buttonColor": "#FF0000", "showBell": true },
+  "component": "SubscribeAnimation"
+}

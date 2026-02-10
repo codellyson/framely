@@ -1,0 +1,13 @@
+{
+  "name": "@codellyson/framely-template-social-intro",
+  "version": "1.0.0",
+  "description": "Clean, modern intro animation perfect for social media videos.",
+  "main": "src/index.js",
+  "framely": { "type": "template" },
+  "peerDependencies": {
+    "@codellyson/framely": ">=0.1.0",
+    "react": ">=18.0.0"
+  },
+  "keywords": ["framely", "template", "intro", "social"],
+  "license": "MIT"
+}

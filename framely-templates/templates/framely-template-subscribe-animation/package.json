@@ -1,0 +1,13 @@
+{
+  "name": "@codellyson/framely-template-subscribe-animation",
+  "version": "1.0.0",
+  "description": "Eye-catching subscribe button animation with bell notification.",
+  "main": "src/index.js",
+  "framely": { "type": "template" },
+  "peerDependencies": {
+    "@codellyson/framely": ">=0.1.0",
+    "react": ">=18.0.0"
+  },
+  "keywords": ["framely", "template", "youtube", "subscribe"],
+  "license": "MIT"
+}

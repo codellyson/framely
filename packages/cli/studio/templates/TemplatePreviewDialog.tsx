@@ -185,7 +185,7 @@ export function TemplatePreviewDialog({
             onClick={onUseTemplate}
             className="template-btn-primary"
           >
-            Use Template
+            {template.installed ? 'Use Template' : 'Install & Use'}
           </button>
         </div>
       </div>

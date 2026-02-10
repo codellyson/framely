@@ -1,0 +1,13 @@
+{
+  "name": "@codellyson/framely-template-product-showcase",
+  "version": "2.0.0",
+  "description": "Professional product showcase template with dynamic transitions.",
+  "main": "src/index.js",
+  "framely": { "type": "template" },
+  "peerDependencies": {
+    "@codellyson/framely": ">=0.1.0",
+    "react": ">=18.0.0"
+  },
+  "keywords": ["framely", "template", "product", "showcase", "marketing"],
+  "license": "MIT"
+}

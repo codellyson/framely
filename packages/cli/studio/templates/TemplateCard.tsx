@@ -17,7 +17,10 @@ export function TemplateCard({ template, onClick }: TemplateCardProps) {
           alt={template.name}
           loading="lazy"
         />
-        {template.featured && (
+        {template.installed && (
+          <span className="template-card-badge template-card-badge--installed">Installed</span>
+        )}
+        {template.featured && !template.installed && (
           <span className="template-card-badge">Featured</span>
         )}
       </div>

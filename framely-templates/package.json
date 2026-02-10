@@ -1,0 +1,11 @@
+{
+  "name": "framely-templates",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Official Framely template registry and packages",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/codellyson/framely-templates"
+  },
+  "license": "MIT"
+}

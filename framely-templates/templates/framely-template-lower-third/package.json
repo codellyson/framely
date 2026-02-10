@@ -1,0 +1,13 @@
+{
+  "name": "@codellyson/framely-template-lower-third",
+  "version": "1.2.0",
+  "description": "Professional lower third with smooth slide-in animation.",
+  "main": "src/index.js",
+  "framely": { "type": "template" },
+  "peerDependencies": {
+    "@codellyson/framely": ">=0.1.0",
+    "react": ">=18.0.0"
+  },
+  "keywords": ["framely", "template", "lower-third", "professional"],
+  "license": "MIT"
+}

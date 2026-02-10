@@ -1,0 +1,16 @@
+{
+  "id": "social-intro-1",
+  "name": "Modern Social Intro",
+  "description": "Clean, modern intro animation perfect for social media videos.",
+  "category": "intro-outro",
+  "tags": ["intro", "social", "modern", "minimal"],
+  "preview": { "thumbnail": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&h=225&fit=crop" },
+  "author": { "name": "Framely Team", "github": "codellyson", "verified": true },
+  "version": "1.0.0",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "durationInFrames": 90,
+  "defaultProps": { "title": "Your Title Here", "subtitle": "Subtitle text", "accentColor": "#6366f1" },
+  "component": "SocialIntro"
+}
