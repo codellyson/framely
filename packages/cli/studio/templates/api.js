@@ -34,13 +34,13 @@ export const templatesApi = {
   },
 
   /**
-   * Install a template package. Reads NDJSON progress stream.
+   * Add a template to the project. Reads NDJSON progress stream.
    */
-  async installTemplate(packageName, onEvent) {
+  async installTemplate(templateId, onEvent) {
     const response = await fetch(`${API_BASE_URL}/install`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ package: packageName }),
+      body: JSON.stringify({ templateId }),
     });
 
     if (!response.ok) {
@@ -75,13 +75,13 @@ export const templatesApi = {
   },
 
   /**
-   * Remove a template package. Reads NDJSON progress stream.
+   * Remove a template from the project. Reads NDJSON progress stream.
    */
-  async removeTemplate(packageName, onEvent) {
+  async removeTemplate(templateId, onEvent) {
     const response = await fetch(`${API_BASE_URL}/remove`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ package: packageName }),
+      body: JSON.stringify({ templateId }),
     });
 
     if (!response.ok) {

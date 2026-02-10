@@ -1,5 +1,6 @@
 {
-  "version": 1,
+  "version": 2,
+  "baseUrl": "https://raw.githubusercontent.com/codellyson/framely/refs/heads/main/framely-templates/templates",
   "templates": [
     {
       "id": "social-intro-1",
@@ -15,7 +16,6 @@
         "github": "codellyson",
         "verified": true
       },
-      "package": "@codellyson/framely-template-social-intro",
       "version": "1.0.0",
       "width": 1080,
       "height": 1920,
@@ -28,7 +28,9 @@
       },
       "downloads": 1250,
       "rating": 4.8,
-      "featured": true
+      "featured": true,
+      "registryDir": "framely-template-social-intro",
+      "files": ["src/index.jsx", "framely-template.json"]
     },
     {
       "id": "youtube-subscribe",
@@ -44,7 +46,6 @@
         "github": "codellyson",
         "verified": true
       },
-      "package": "@codellyson/framely-template-subscribe-animation",
       "version": "1.0.0",
       "width": 1920,
       "height": 1080,
@@ -57,7 +58,9 @@
       },
       "downloads": 2340,
       "rating": 4.9,
-      "featured": true
+      "featured": true,
+      "registryDir": "framely-template-subscribe-animation",
+      "files": ["src/index.jsx", "framely-template.json"]
     },
     {
       "id": "lower-third-1",
@@ -72,7 +75,6 @@
         "name": "Motion Pro",
         "verified": true
       },
-      "package": "@codellyson/framely-template-lower-third",
       "version": "1.2.0",
       "width": 1920,
       "height": 1080,
@@ -85,7 +87,9 @@
       },
       "downloads": 890,
       "rating": 4.6,
-      "featured": false
+      "featured": false,
+      "registryDir": "framely-template-lower-third",
+      "files": ["src/index.jsx", "framely-template.json"]
     },
     {
       "id": "text-reveal-1",
@@ -100,7 +104,6 @@
         "name": "Type Master",
         "verified": false
       },
-      "package": "@codellyson/framely-template-text-reveal",
       "version": "1.0.0",
       "width": 1920,
       "height": 1080,
@@ -113,7 +116,9 @@
       },
       "downloads": 1567,
       "rating": 4.7,
-      "featured": false
+      "featured": false,
+      "registryDir": "framely-template-text-reveal",
+      "files": ["src/index.jsx", "framely-template.json"]
     },
     {
       "id": "gradient-bg-1",
@@ -129,7 +134,6 @@
         "github": "codellyson",
         "verified": true
       },
-      "package": "@codellyson/framely-template-animated-gradient",
       "version": "1.0.0",
       "width": 1920,
       "height": 1080,
@@ -141,7 +145,9 @@
       },
       "downloads": 3210,
       "rating": 4.5,
-      "featured": false
+      "featured": false,
+      "registryDir": "framely-template-animated-gradient",
+      "files": ["src/index.jsx", "framely-template.json"]
     },
     {
       "id": "promo-slide-1",
@@ -156,7 +162,6 @@
         "name": "Ad Studio",
         "verified": true
       },
-      "package": "@codellyson/framely-template-product-showcase",
       "version": "2.0.0",
       "width": 1080,
       "height": 1080,
@@ -169,7 +174,9 @@
       },
       "downloads": 756,
       "rating": 4.4,
-      "featured": true
+      "featured": true,
+      "registryDir": "framely-template-product-showcase",
+      "files": ["src/index.jsx", "framely-template.json"]
     },
     {
       "id": "presentation-1",
@@ -184,7 +191,6 @@
         "name": "Slide Pro",
         "verified": false
       },
-      "package": "@codellyson/framely-template-slide-transition",
       "version": "1.1.0",
       "width": 1920,
       "height": 1080,
@@ -196,7 +202,9 @@
       },
       "downloads": 445,
       "rating": 4.3,
-      "featured": false
+      "featured": false,
+      "registryDir": "framely-template-slide-transition",
+      "files": ["src/index.jsx", "framely-template.json"]
     },
     {
       "id": "instagram-story",
@@ -211,7 +219,6 @@
         "name": "Social Creator",
         "verified": true
       },
-      "package": "@codellyson/framely-template-instagram-story",
       "version": "1.0.0",
       "width": 1080,
       "height": 1920,
@@ -223,7 +230,9 @@
       },
       "downloads": 1890,
       "rating": 4.6,
-      "featured": false
+      "featured": false,
+      "registryDir": "framely-template-instagram-story",
+      "files": ["src/index.jsx", "framely-template.json"]
     }
   ]
 }

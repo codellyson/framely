@@ -2,57 +2,16 @@
  * Templates Command
  *
  * CLI subcommands for managing Framely templates:
- *   framely templates list     — List available templates from the registry
- *   framely templates install  — Install a template package
- *   framely templates remove   — Remove a template package
+ *   framely templates list      — List available templates from the registry
+ *   framely templates add       — Add a template to your project
+ *   framely templates remove    — Remove a template from your project
  */
 
-import { spawn, execFileSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import chalk from 'chalk';
-import { fetchRegistry, getRegistryUrl } from '../utils/registry.js';
+import { fetchRegistry, fetchTemplateFile, getRegistryUrl } from '../utils/registry.js';
 import { discoverInstalledTemplates } from '../utils/discover.js';
-
-/**
- * Detect which package manager the project uses.
- *
- * @param {string} projectDir
- * @returns {'pnpm' | 'yarn' | 'npm'}
- */
-export function detectPackageManager(projectDir) {
-  if (fs.existsSync(path.join(projectDir, 'pnpm-lock.yaml'))) return 'pnpm';
-  if (fs.existsSync(path.join(projectDir, 'yarn.lock'))) return 'yarn';
-  return 'npm';
-}
-
-/**
- * Run a package manager command and stream output.
- *
- * @param {string} pm - Package manager name
- * @param {string[]} args - Command arguments
- * @param {string} cwd - Working directory
- * @returns {Promise<void>}
- */
-function resolvePMPath(pm) {
-  try {
-    return execFileSync('which', [pm], { encoding: 'utf8' }).trim();
-  } catch {
-    return pm;
-  }
-}
-
-function runPM(pm, args, cwd) {
-  const resolvedPM = resolvePMPath(pm);
-  return new Promise((resolve, reject) => {
-    const proc = spawn(resolvedPM, args, { cwd, stdio: 'inherit' });
-    proc.on('close', (code) => {
-      if (code === 0) resolve();
-      else reject(new Error(`${pm} ${args.join(' ')} exited with code ${code}`));
-    });
-    proc.on('error', reject);
-  });
-}
 
 /**
  * framely templates list
@@ -63,7 +22,7 @@ export async function templatesListCommand(options) {
 
   console.log(chalk.cyan('\nFetching template registry...\n'));
 
-  const registry = await fetchRegistry(registryUrl);
+  const { templates: registry } = await fetchRegistry(registryUrl);
   if (registry.length === 0) {
     console.log(chalk.yellow('No templates found in the registry.'));
     console.log(chalk.gray('Check your network connection or registry URL.\n'));
@@ -73,14 +32,13 @@ export async function templatesListCommand(options) {
   // Check which are installed
   const installed = discoverInstalledTemplates(projectDir);
   const installedIds = new Set(installed.map((i) => i.meta.id));
-  const installedPkgs = new Set(installed.map((i) => i.packageName));
 
   // Print table
   console.log(chalk.white.bold('  Available Templates\n'));
 
   for (const tmpl of registry) {
-    const isInstalled = installedIds.has(tmpl.id) || installedPkgs.has(tmpl.package);
-    const badge = isInstalled ? chalk.green(' [installed]') : '';
+    const isInstalled = installedIds.has(tmpl.id);
+    const badge = isInstalled ? chalk.green(' [added]') : '';
     const featured = tmpl.featured ? chalk.yellow(' *') : '';
 
     console.log(
@@ -90,52 +48,69 @@ export async function templatesListCommand(options) {
       `    ${tmpl.name} — ${chalk.gray(tmpl.description)}`
     );
     console.log(
-      `    ${chalk.gray(`${tmpl.width}x${tmpl.height} @ ${tmpl.fps}fps | ${tmpl.package}`)}`
+      `    ${chalk.gray(`${tmpl.width}x${tmpl.height} @ ${tmpl.fps}fps`)}`
     );
     console.log('');
   }
 
   console.log(chalk.gray(`  ${registry.length} template(s) available\n`));
-  console.log(chalk.gray('  Install with: framely templates install <package-name>\n'));
+  console.log(chalk.gray('  Add with: framely templates add <template-id>\n'));
 }
 
 /**
- * framely templates install <package>
+ * framely templates add <template-id>
  */
-export async function templatesInstallCommand(packageName, options) {
+export async function templatesInstallCommand(templateId, options) {
   const projectDir = process.cwd();
-  const pm = detectPackageManager(projectDir);
+  const registryUrl = getRegistryUrl(projectDir);
 
-  console.log(chalk.cyan(`\nInstalling ${packageName} with ${pm}...\n`));
+  console.log(chalk.cyan(`\nAdding template ${templateId}...\n`));
 
-  const installCmd = pm === 'yarn' ? 'add' : 'install';
+  const { templates: registry, baseUrl } = await fetchRegistry(registryUrl);
+  const template = registry.find(t => t.id === templateId);
 
-  try {
-    await runPM(pm, [installCmd, packageName], projectDir);
-    console.log(chalk.green(`\nTemplate ${packageName} installed successfully.\n`));
-    console.log(chalk.gray('Start the studio to use it: npx framely preview\n'));
-  } catch (err) {
-    console.error(chalk.red(`\nFailed to install ${packageName}: ${err.message}\n`));
+  if (!template) {
+    console.error(chalk.red(`Template "${templateId}" not found in registry.`));
     process.exit(1);
   }
+
+  if (!template.registryDir || !template.files || template.files.length === 0) {
+    console.error(chalk.red('Template has no files listed in the registry.'));
+    process.exit(1);
+  }
+
+  const targetDir = path.join(projectDir, 'src', 'templates', templateId);
+  fs.mkdirSync(targetDir, { recursive: true });
+
+  for (const filePath of template.files) {
+    console.log(chalk.gray(`  Fetching ${filePath}...`));
+    const content = await fetchTemplateFile(baseUrl, template.registryDir, filePath);
+
+    // Flatten src/ prefix: "src/index.jsx" -> "index.jsx"
+    const targetPath = filePath.startsWith('src/') ? filePath.slice(4) : filePath;
+    const fullTargetPath = path.join(targetDir, targetPath);
+    fs.mkdirSync(path.dirname(fullTargetPath), { recursive: true });
+    fs.writeFileSync(fullTargetPath, content, 'utf-8');
+    console.log(chalk.green(`  Wrote ${targetPath}`));
+  }
+
+  console.log(chalk.green(`\nTemplate ${templateId} added to src/templates/${templateId}/`));
+  console.log(chalk.gray('You can customize the template files directly.\n'));
 }
 
 /**
- * framely templates remove <package>
+ * framely templates remove <template-id>
  */
-export async function templatesRemoveCommand(packageName, options) {
+export async function templatesRemoveCommand(templateId, options) {
   const projectDir = process.cwd();
-  const pm = detectPackageManager(projectDir);
+  const targetDir = path.join(projectDir, 'src', 'templates', templateId);
 
-  console.log(chalk.cyan(`\nRemoving ${packageName} with ${pm}...\n`));
-
-  const removeCmd = pm === 'yarn' ? 'remove' : 'uninstall';
-
-  try {
-    await runPM(pm, [removeCmd, packageName], projectDir);
-    console.log(chalk.green(`\nTemplate ${packageName} removed.\n`));
-  } catch (err) {
-    console.error(chalk.red(`\nFailed to remove ${packageName}: ${err.message}\n`));
+  if (!fs.existsSync(targetDir)) {
+    console.error(chalk.red(`Template "${templateId}" not found at src/templates/${templateId}/`));
     process.exit(1);
   }
+
+  console.log(chalk.cyan(`\nRemoving template ${templateId}...\n`));
+  fs.rmSync(targetDir, { recursive: true, force: true });
+  console.log(chalk.green(`Template ${templateId} removed.\n`));
 }

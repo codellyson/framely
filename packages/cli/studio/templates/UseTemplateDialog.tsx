@@ -63,18 +63,16 @@ export function UseTemplateDialog({
   const needsInstall = !template.installed && !installDone;
 
   const handleInstall = async () => {
-    if (!template.package) {
-      setError('No package name available for this template');
-      return;
-    }
     setInstalling(true);
     setInstallLog([]);
     setError(null);
 
     try {
-      await templatesApi.installTemplate(template.package, (event) => {
+      await templatesApi.installTemplate(template.id, (event) => {
         if (event.type === 'log') {
           setInstallLog((prev) => [...prev, event.text]);
+        } else if (event.type === 'status') {
+          setInstallLog((prev) => [...prev, event.message + '\n']);
         }
       });
       setInstallDone(true);
@@ -116,7 +114,7 @@ export function UseTemplateDialog({
         {/* Header */}
         <div className="template-preview-header">
           <h2 id="use-dialog-title">
-            {needsInstall ? 'Install Template' : 'Use Template'}
+            {needsInstall ? 'Add Template' : 'Use Template'}
           </h2>
           <button
             type="button"
@@ -135,12 +133,10 @@ export function UseTemplateDialog({
         {needsInstall ? (
           <div className="use-template-content">
             <p className="use-template-intro">
-              <strong>{template.name}</strong> needs to be installed before use.
-              {template.package && (
-                <span style={{ display: 'block', marginTop: 4, opacity: 0.7, fontSize: '0.9em' }}>
-                  Package: {template.package}
-                </span>
-              )}
+              <strong>{template.name}</strong> needs to be added before use.
+              <span style={{ display: 'block', marginTop: 4, opacity: 0.7, fontSize: '0.9em' }}>
+                Files will be added to src/templates/{template.id}/
+              </span>
             </p>
 
             {installLog.length > 0 && (
@@ -159,9 +155,9 @@ export function UseTemplateDialog({
                 type="button"
                 onClick={handleInstall}
                 className="template-btn-primary"
-                disabled={installing || !template.package}
+                disabled={installing}
               >
-                {installing ? 'Installing...' : 'Install'}
+                {installing ? 'Adding...' : 'Add'}
               </button>
             </div>
           </div>

@@ -94,6 +94,7 @@ function App() {
   const handleUseTemplate = useCallback((template, customId, customProps) => {
     // Get the actual component from the template registry
     const component = getTemplateComponent(template.id);
+    console.log('Using template:', template.id, 'Component found:', !!component);
 
     const newComposition = {
       id: customId,

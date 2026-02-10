@@ -18,8 +18,8 @@ if (nodeVersion[0] < 18) {
  *   framely preview                          - Start the preview server
  *   framely compositions                     - List available compositions
  *   framely templates list                   - List available templates
- *   framely templates install <package>      - Install a template package
- *   framely templates remove <package>       - Remove a template package
+ *   framely templates add <template-id>     - Add a template to your project
+ *   framely templates remove <template-id>  - Remove a template from your project
  */
 
 import { program } from 'commander';
@@ -105,13 +105,13 @@ templates
   .action(templatesListCommand);
 
 templates
-  .command('install <package>')
-  .description('Install a template package')
+  .command('add <template-id>')
+  .description('Add a template to your project')
   .action(templatesInstallCommand);
 
 templates
-  .command('remove <package>')
-  .description('Remove an installed template package')
+  .command('remove <template-id>')
+  .description('Remove a template from your project')
   .action(templatesRemoveCommand);
 
 program.parse();

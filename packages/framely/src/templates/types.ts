@@ -54,8 +54,10 @@ export interface Template {
   preview: TemplatePreview;
   /** Template author */
   author: TemplateAuthor;
-  /** npm package name (e.g. @framely-templates/social-intro) */
-  package?: string;
+  /** Registry directory name */
+  registryDir?: string;
+  /** Source files to copy */
+  files?: string[];
   /** Template version */
   version: string;
   /** Video width */
@@ -85,7 +87,7 @@ export interface Template {
 }
 
 /**
- * Metadata stored in a template package's framely-template.json
+ * Metadata stored in a template's framely-template.json
  */
 export interface TemplatePackageMeta {
   id: string;
@@ -106,8 +108,10 @@ export interface TemplatePackageMeta {
  * A template entry in the GitHub registry
  */
 export interface RegistryTemplate extends Template {
-  /** npm package name — required in registry entries */
-  package: string;
+  /** Directory name in the registry baseUrl */
+  registryDir: string;
+  /** Source files to copy into the project */
+  files: string[];
 }
 
 /**
@@ -115,6 +119,8 @@ export interface RegistryTemplate extends Template {
  */
 export interface RegistrySchema {
   version: number;
+  /** Base URL for fetching template source files */
+  baseUrl: string;
   templates: RegistryTemplate[];
 }
 

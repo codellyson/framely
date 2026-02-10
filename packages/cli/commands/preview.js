@@ -16,13 +16,12 @@ import fs from 'fs';
 import chalk from 'chalk';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
-import { spawn } from 'child_process';
 import { createBrowser, closeBrowser } from '../utils/browser.js';
 import { renderVideo } from '../utils/render.js';
+
 import { getCodecConfig } from '../utils/codecs.js';
-import { fetchRegistry, getRegistryUrl } from '../utils/registry.js';
+import { fetchRegistry, fetchTemplateFile, getRegistryUrl } from '../utils/registry.js';
 import { discoverInstalledTemplates, mergeWithRegistry, generateVirtualModule } from '../utils/discover.js';
-import { detectPackageManager } from './templates.js';
 import { createServer as createViteServer } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -90,13 +89,13 @@ export function startRenderApi(apiPort, frontendUrl, outputsDir, publicDir, proj
       return;
     }
 
-    // POST /api/templates/install — install a template package
+    // POST /api/templates/install — add a template to the project
     if (req.method === 'POST' && req.url === '/api/templates/install') {
       handleTemplateInstall(req, res, projectDir, templateState);
       return;
     }
 
-    // POST /api/templates/remove — remove a template package
+    // POST /api/templates/remove — remove a template from the project
     if (req.method === 'POST' && req.url === '/api/templates/remove') {
       handleTemplateRemove(req, res, projectDir, templateState);
       return;
@@ -443,7 +442,7 @@ function handleOutputFile(req, res, outputsDir) {
  */
 async function getMergedTemplates(projectDir) {
   const registryUrl = getRegistryUrl(projectDir);
-  const [registry, installed] = await Promise.all([
+  const [{ templates: registry }, installed] = await Promise.all([
     fetchRegistry(registryUrl),
     Promise.resolve(discoverInstalledTemplates(projectDir)),
   ]);
@@ -555,7 +554,8 @@ async function handleTemplateCategories(req, res, projectDir) {
 }
 
 /**
- * Handle POST /api/templates/install — install a template package.
+ * Handle POST /api/templates/install — add a template to the project.
+ * Fetches source files from the registry and copies them to src/templates/<id>/.
  * Streams NDJSON progress events.
  */
 async function handleTemplateInstall(req, res, projectDir, templateState) {
@@ -568,15 +568,12 @@ async function handleTemplateInstall(req, res, projectDir, templateState) {
     return;
   }
 
-  const packageName = body.package;
-  if (!packageName) {
+  const templateId = body.templateId;
+  if (!templateId) {
     res.writeHead(400, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Missing "package" field' }));
+    res.end(JSON.stringify({ error: 'Missing "templateId" field' }));
     return;
   }
-
-  const pm = detectPackageManager(projectDir);
-  const installCmd = pm === 'yarn' ? 'add' : 'install';
 
   res.writeHead(200, {
     'Content-Type': 'application/x-ndjson',
@@ -588,40 +585,60 @@ async function handleTemplateInstall(req, res, projectDir, templateState) {
     res.write(JSON.stringify(data) + '\n');
   }
 
-  sendEvent({ type: 'start', package: packageName, pm });
+  sendEvent({ type: 'start', templateId });
 
-  const proc = spawn(pm, [installCmd, packageName], { cwd: projectDir, stdio: ['ignore', 'pipe', 'pipe'] });
+  try {
+    sendEvent({ type: 'status', message: 'Fetching template registry...' });
+    const registryUrl = getRegistryUrl(projectDir);
+    const { templates, baseUrl } = await fetchRegistry(registryUrl);
 
-  proc.stdout.on('data', (chunk) => {
-    sendEvent({ type: 'log', stream: 'stdout', text: chunk.toString() });
-  });
-
-  proc.stderr.on('data', (chunk) => {
-    sendEvent({ type: 'log', stream: 'stderr', text: chunk.toString() });
-  });
-
-  proc.on('close', (code) => {
-    if (code === 0) {
-      // Re-discover templates and invalidate virtual module
-      if (templateState && templateState.invalidate) {
-        templateState.installed = discoverInstalledTemplates(projectDir);
-        templateState.invalidate();
-      }
-      sendEvent({ type: 'complete', package: packageName });
-    } else {
-      sendEvent({ type: 'error', message: `${pm} ${installCmd} ${packageName} exited with code ${code}` });
+    const template = templates.find(t => t.id === templateId);
+    if (!template) {
+      sendEvent({ type: 'error', message: `Template "${templateId}" not found in registry` });
+      res.end();
+      return;
     }
-    res.end();
-  });
 
-  proc.on('error', (err) => {
+    if (!template.registryDir || !template.files || template.files.length === 0) {
+      sendEvent({ type: 'error', message: 'Template has no files listed in the registry' });
+      res.end();
+      return;
+    }
+
+    const targetDir = path.join(projectDir, 'src', 'templates', templateId);
+    fs.mkdirSync(targetDir, { recursive: true });
+
+    for (const filePath of template.files) {
+      sendEvent({ type: 'status', message: `Fetching ${filePath}...` });
+      const content = await fetchTemplateFile(baseUrl, template.registryDir, filePath);
+
+      // Flatten src/ prefix: "src/index.jsx" -> "index.jsx"
+      const targetPath = filePath.startsWith('src/')
+        ? filePath.slice(4)
+        : filePath;
+
+      const fullTargetPath = path.join(targetDir, targetPath);
+      fs.mkdirSync(path.dirname(fullTargetPath), { recursive: true });
+      fs.writeFileSync(fullTargetPath, content, 'utf-8');
+      sendEvent({ type: 'log', stream: 'stdout', text: `  Written: ${targetPath}\n` });
+    }
+
+    // Re-discover templates and invalidate virtual module
+    if (templateState && templateState.invalidate) {
+      templateState.installed = discoverInstalledTemplates(projectDir);
+      templateState.invalidate();
+    }
+
+    sendEvent({ type: 'complete', templateId });
+  } catch (err) {
     sendEvent({ type: 'error', message: err.message });
-    res.end();
-  });
+  }
+  res.end();
 }
 
 /**
- * Handle POST /api/templates/remove — remove a template package.
+ * Handle POST /api/templates/remove — remove a template from the project.
+ * Deletes the template directory from src/templates/<id>/.
  * Streams NDJSON progress events.
  */
 async function handleTemplateRemove(req, res, projectDir, templateState) {
@@ -634,15 +651,12 @@ async function handleTemplateRemove(req, res, projectDir, templateState) {
     return;
   }
 
-  const packageName = body.package;
-  if (!packageName) {
+  const templateId = body.templateId;
+  if (!templateId) {
     res.writeHead(400, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Missing "package" field' }));
+    res.end(JSON.stringify({ error: 'Missing "templateId" field' }));
     return;
   }
-
-  const pm = detectPackageManager(projectDir);
-  const removeCmd = pm === 'yarn' ? 'remove' : 'uninstall';
 
   res.writeHead(200, {
     'Content-Type': 'application/x-ndjson',
@@ -654,35 +668,30 @@ async function handleTemplateRemove(req, res, projectDir, templateState) {
     res.write(JSON.stringify(data) + '\n');
   }
 
-  sendEvent({ type: 'start', package: packageName, pm });
+  sendEvent({ type: 'start', templateId });
 
-  const proc = spawn(pm, [removeCmd, packageName], { cwd: projectDir, stdio: ['ignore', 'pipe', 'pipe'] });
+  try {
+    const targetDir = path.join(projectDir, 'src', 'templates', templateId);
 
-  proc.stdout.on('data', (chunk) => {
-    sendEvent({ type: 'log', stream: 'stdout', text: chunk.toString() });
-  });
-
-  proc.stderr.on('data', (chunk) => {
-    sendEvent({ type: 'log', stream: 'stderr', text: chunk.toString() });
-  });
-
-  proc.on('close', (code) => {
-    if (code === 0) {
-      if (templateState && templateState.invalidate) {
-        templateState.installed = discoverInstalledTemplates(projectDir);
-        templateState.invalidate();
-      }
-      sendEvent({ type: 'complete', package: packageName });
-    } else {
-      sendEvent({ type: 'error', message: `${pm} ${removeCmd} ${packageName} exited with code ${code}` });
+    if (!fs.existsSync(targetDir)) {
+      sendEvent({ type: 'error', message: `Template directory not found: src/templates/${templateId}` });
+      res.end();
+      return;
     }
-    res.end();
-  });
 
-  proc.on('error', (err) => {
+    fs.rmSync(targetDir, { recursive: true, force: true });
+    sendEvent({ type: 'log', stream: 'stdout', text: `  Removed: src/templates/${templateId}\n` });
+
+    if (templateState && templateState.invalidate) {
+      templateState.installed = discoverInstalledTemplates(projectDir);
+      templateState.invalidate();
+    }
+
+    sendEvent({ type: 'complete', templateId });
+  } catch (err) {
     sendEvent({ type: 'error', message: err.message });
-    res.end();
-  });
+  }
+  res.end();
 }
 
 /**

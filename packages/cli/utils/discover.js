@@ -1,7 +1,7 @@
 /**
  * Template Discovery
  *
- * Scans node_modules for installed Framely template packages and
+ * Scans src/templates/ for locally added Framely templates and
  * merges them with the remote registry.
  */
 
@@ -9,87 +9,69 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * Discover installed template packages in node_modules.
+ * Discover installed templates in the project's src/templates/ directory.
  *
- * Looks for packages whose package.json contains:
- *   { "framely": { "type": "template" } }
+ * Each subdirectory must contain a framely-template.json with at least
+ * an `id` and `name` field, plus a component entry (index.jsx/tsx/js/ts).
  *
  * @param {string} projectDir - The user's project directory
- * @returns {Array<{ meta: object, packageName: string, version: string, componentEntry: string }>}
+ * @returns {Array<{ meta: object, templateId: string, templateDir: string, componentEntry: string }>}
  */
 export function discoverInstalledTemplates(projectDir) {
-  const nodeModules = path.join(projectDir, 'node_modules');
-  if (!fs.existsSync(nodeModules)) return [];
+  const templatesDir = path.join(projectDir, 'src', 'templates');
+  if (!fs.existsSync(templatesDir)) return [];
 
   const installed = [];
+  const entries = safeReaddir(templatesDir);
 
-  // Scan top-level and scoped (@org/) directories
-  const entries = safeReaddir(nodeModules);
   for (const entry of entries) {
     if (entry.startsWith('.')) continue;
 
-    if (entry.startsWith('@')) {
-      // Scoped package — scan subdirectory
-      const scopeDir = path.join(nodeModules, entry);
-      const scopeEntries = safeReaddir(scopeDir);
-      for (const scopeEntry of scopeEntries) {
-        const result = checkPackage(path.join(scopeDir, scopeEntry), `${entry}/${scopeEntry}`);
-        if (result) installed.push(result);
-      }
-    } else {
-      const result = checkPackage(path.join(nodeModules, entry), entry);
-      if (result) installed.push(result);
-    }
+    const templateDir = path.join(templatesDir, entry);
+    const stat = safeStatSync(templateDir);
+    if (!stat || !stat.isDirectory()) continue;
+
+    const meta = readTemplateMetadata(templateDir);
+    if (!meta) continue;
+
+    const componentEntry = resolveComponentEntry(templateDir);
+    if (!componentEntry) continue;
+
+    installed.push({
+      meta,
+      templateId: meta.id,
+      templateDir: entry,
+      componentEntry,
+    });
   }
 
   return installed;
 }
 
 /**
- * Check if a directory is a Framely template package.
+ * Resolve the component entry point in a template directory.
  *
- * @param {string} packageDir - Absolute path to the package directory
- * @param {string} packageName - The npm package name
- * @returns {{ meta: object, packageName: string, version: string, componentEntry: string } | null}
+ * @param {string} templateDir - Absolute path to the template directory
+ * @returns {string | null} Absolute path to the entry file, or null
  */
-function checkPackage(packageDir, packageName) {
-  try {
-    const pkgJsonPath = path.join(packageDir, 'package.json');
-    if (!fs.existsSync(pkgJsonPath)) return null;
-
-    const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8'));
-
-    // Check for the framely template marker
-    if (!pkgJson.framely || pkgJson.framely.type !== 'template') return null;
-
-    // Read template metadata
-    const meta = readTemplateMetadata(packageDir);
-    if (!meta) return null;
-
-    // Resolve the component entry point
-    const mainField = pkgJson.main || 'src/index.jsx';
-    const componentEntry = path.join(packageDir, mainField);
-
-    return {
-      meta,
-      packageName,
-      version: pkgJson.version || '0.0.0',
-      componentEntry,
-    };
-  } catch {
-    return null;
+function resolveComponentEntry(templateDir) {
+  const candidates = ['index.jsx', 'index.tsx', 'index.js', 'index.ts'];
+  for (const candidate of candidates) {
+    const fullPath = path.join(templateDir, candidate);
+    if (fs.existsSync(fullPath)) return fullPath;
   }
+  return null;
 }
 
 /**
- * Read framely-template.json from a package directory.
+ * Read framely-template.json from a template directory.
  *
- * @param {string} packageDir - Absolute path to the package
+ * @param {string} templateDir - Absolute path to the template directory
  * @returns {object | null} Template metadata or null if not found/invalid
  */
-export function readTemplateMetadata(packageDir) {
+export function readTemplateMetadata(templateDir) {
   try {
-    const metaPath = path.join(packageDir, 'framely-template.json');
+    const metaPath = path.join(templateDir, 'framely-template.json');
     if (!fs.existsSync(metaPath)) return null;
     const raw = fs.readFileSync(metaPath, 'utf-8');
     const meta = JSON.parse(raw);
@@ -103,7 +85,7 @@ export function readTemplateMetadata(packageDir) {
 /**
  * Merge installed templates with the remote registry.
  *
- * Registry templates get `installed: true` if the package is found locally.
+ * Registry templates get `installed: true` if a matching local template is found.
  * Installed templates not in the registry are also included.
  *
  * @param {Array} installed - From discoverInstalledTemplates()
@@ -111,12 +93,9 @@ export function readTemplateMetadata(packageDir) {
  * @returns {Array} Merged template list
  */
 export function mergeWithRegistry(installed, registry) {
-  // Build a lookup of installed packages by their template ID
   const installedById = new Map();
-  const installedByPkg = new Map();
   for (const inst of installed) {
     installedById.set(inst.meta.id, inst);
-    installedByPkg.set(inst.packageName, inst);
   }
 
   const merged = [];
@@ -124,14 +103,12 @@ export function mergeWithRegistry(installed, registry) {
 
   // Process registry templates first (they have richer metadata like downloads, rating)
   for (const regTemplate of registry) {
-    const inst = installedByPkg.get(regTemplate.package) || installedById.get(regTemplate.id);
+    const inst = installedById.get(regTemplate.id);
     merged.push({
       ...regTemplate,
       installed: !!inst,
-      installedVersion: inst ? inst.version : undefined,
     });
     seen.add(regTemplate.id);
-    if (inst) seen.add(inst.meta.id);
   }
 
   // Add installed templates not in the registry
@@ -139,10 +116,8 @@ export function mergeWithRegistry(installed, registry) {
     if (seen.has(inst.meta.id)) continue;
     merged.push({
       ...inst.meta,
-      package: inst.packageName,
-      version: inst.version,
+      version: inst.meta.version || '0.0.0',
       installed: true,
-      installedVersion: inst.version,
     });
   }
 
@@ -150,9 +125,9 @@ export function mergeWithRegistry(installed, registry) {
 }
 
 /**
- * Generate a virtual module source string for all installed template packages.
+ * Generate a virtual module source string for all installed templates.
  *
- * The generated module exports `installedTemplates` (a map of id → { component, meta })
+ * The generated module exports `installedTemplates` (a map of id → component)
  * and a `getTemplateComponent(id)` helper.
  *
  * @param {Array} installed - From discoverInstalledTemplates()
@@ -170,9 +145,9 @@ export function getTemplateComponent(id) { return null; }
   const entries = [];
 
   installed.forEach((inst, i) => {
-    const pkgName = inst.packageName;
+    const absPath = inst.componentEntry.replace(/\\/g, '/');
     const id = inst.meta.id;
-    imports.push(`import Comp${i} from '${pkgName}';`);
+    imports.push(`import Comp${i} from '${absPath}';`);
     entries.push(`  '${id}': Comp${i}`);
   });
 
@@ -197,5 +172,16 @@ function safeReaddir(dir) {
     return fs.readdirSync(dir);
   } catch {
     return [];
+  }
+}
+
+/**
+ * Safe statSync that returns null on error.
+ */
+function safeStatSync(filepath) {
+  try {
+    return fs.statSync(filepath);
+  } catch {
+    return null;
   }
 }

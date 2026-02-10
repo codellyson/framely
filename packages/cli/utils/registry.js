@@ -10,7 +10,7 @@ import os from 'os';
 
 /** Default registry URL (GitHub raw) */
 export const DEFAULT_REGISTRY_URL =
-  'https://raw.githubusercontent.com/codellyson/framely-templates/main/registry.json';
+  'https://raw.githubusercontent.com/codellyson/framely/refs/heads/main/framely-templates/registry.json';
 
 /** Cache TTL: 1 hour */
 const CACHE_TTL_MS = 60 * 60 * 1000;
@@ -24,7 +24,7 @@ const CACHE_FILE = path.join(CACHE_DIR, 'registry-cache.json');
 /**
  * Read the cached registry if it exists and is fresh.
  *
- * @returns {{ templates: Array, fetchedAt: number } | null}
+ * @returns {{ templates: Array, baseUrl: string, fetchedAt: number } | null}
  */
 function readCache() {
   try {
@@ -41,7 +41,7 @@ function readCache() {
 /**
  * Write registry data to the cache.
  *
- * @param {object} data - Registry data with templates array
+ * @param {object} data - Registry data with templates array and baseUrl
  */
 function writeCache(data) {
   try {
@@ -63,7 +63,7 @@ function writeCache(data) {
  * Supports file:// URLs and absolute paths for local development.
  *
  * @param {string} [registryUrl] - Custom registry URL (defaults to GitHub)
- * @returns {Promise<Array>} Array of registry template objects
+ * @returns {Promise<{ templates: Array, baseUrl: string }>}
  */
 export async function fetchRegistry(registryUrl) {
   const url = registryUrl || DEFAULT_REGISTRY_URL;
@@ -71,7 +71,7 @@ export async function fetchRegistry(registryUrl) {
   // Check cache freshness
   const cached = readCache();
   if (cached && cached.fetchedAt && Date.now() - cached.fetchedAt < CACHE_TTL_MS) {
-    return cached.templates;
+    return { templates: cached.templates, baseUrl: cached.baseUrl || '' };
   }
 
   // Support local file paths (file:// URLs or absolute paths)
@@ -87,10 +87,12 @@ export async function fetchRegistry(registryUrl) {
         throw new Error('Invalid registry format');
       }
       writeCache(data);
-      return data.templates;
+      return { templates: data.templates, baseUrl: data.baseUrl || '' };
     } catch {
-      if (cached && Array.isArray(cached.templates)) return cached.templates;
-      return [];
+      if (cached && Array.isArray(cached.templates)) {
+        return { templates: cached.templates, baseUrl: cached.baseUrl || '' };
+      }
+      return { templates: [], baseUrl: '' };
     }
   }
 
@@ -112,15 +114,15 @@ export async function fetchRegistry(registryUrl) {
     }
 
     writeCache(data);
-    return data.templates;
+    return { templates: data.templates, baseUrl: data.baseUrl || '' };
   } catch (err) {
     // Fallback to stale cache if available
     if (cached && Array.isArray(cached.templates)) {
-      return cached.templates;
+      return { templates: cached.templates, baseUrl: cached.baseUrl || '' };
     }
 
     // No cache, no network — return empty
-    return [];
+    return { templates: [], baseUrl: '' };
   }
 }
 
@@ -134,8 +136,6 @@ export function getRegistryUrl(projectDir) {
   try {
     const configPath = path.join(projectDir, 'framely.config.js');
     if (fs.existsSync(configPath)) {
-      // Dynamic import would be ideal but we keep it simple
-      // Users can set registry.url in their config
       const raw = fs.readFileSync(configPath, 'utf-8');
       const match = raw.match(/registry\s*:\s*\{\s*url\s*:\s*['"]([^'"]+)['"]/);
       if (match) return match[1];
@@ -144,6 +144,36 @@ export function getRegistryUrl(projectDir) {
     // Config read failure is non-fatal
   }
   return DEFAULT_REGISTRY_URL;
+}
+
+/**
+ * Fetch a single file from the template registry.
+ * Supports both remote URLs and local filesystem paths.
+ *
+ * @param {string} baseUrl - Registry base URL or local directory path
+ * @param {string} registryDir - Template directory name
+ * @param {string} filePath - Relative file path within the template
+ * @returns {Promise<string>} File contents as text
+ */
+export async function fetchTemplateFile(baseUrl, registryDir, filePath) {
+  const fullPath = `${baseUrl}/${registryDir}/${filePath}`;
+
+  // Support local paths
+  const localPath = fullPath.startsWith('file://')
+    ? fullPath.replace('file://', '')
+    : fullPath.startsWith('/') && !fullPath.startsWith('//') ? fullPath : null;
+
+  if (localPath) {
+    return fs.readFileSync(localPath, 'utf-8');
+  }
+
+  const response = await fetch(fullPath, {
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${filePath}: ${response.status}`);
+  }
+  return response.text();
 }
 
 /**
