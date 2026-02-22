@@ -8,9 +8,19 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-/** Default registry URL (GitHub raw) */
+/** Default registry URL (jsDelivr CDN — mirrors GitHub, more reliable than raw.githubusercontent.com) */
 export const DEFAULT_REGISTRY_URL =
-  'https://raw.githubusercontent.com/codellyson/framely/refs/heads/main/framely-templates/registry.json';
+  'https://cdn.jsdelivr.net/gh/codellyson/framely@main/framely-templates/registry.json';
+
+/** Fallback registry URL (GitHub raw — used if jsDelivr is down) */
+const FALLBACK_REGISTRY_URL =
+  'https://raw.githubusercontent.com/codellyson/framely/main/framely-templates/registry.json';
+
+/** CDN mirrors for template file fetching (tried in order) */
+const CDN_BASE_URLS = [
+  'https://cdn.jsdelivr.net/gh/codellyson/framely@main/framely-templates/templates',
+  'https://raw.githubusercontent.com/codellyson/framely/main/framely-templates/templates',
+];
 
 /** Cache TTL: 1 hour */
 const CACHE_TTL_MS = 60 * 60 * 1000;
@@ -96,34 +106,42 @@ export async function fetchRegistry(registryUrl) {
     }
   }
 
-  // Fetch from remote
-  try {
-    const response = await fetch(url, {
-      headers: { 'Accept': 'application/json' },
-      signal: AbortSignal.timeout(10000),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Registry fetch failed: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    if (!data || !Array.isArray(data.templates)) {
-      throw new Error('Invalid registry format');
-    }
-
-    writeCache(data);
-    return { templates: data.templates, baseUrl: data.baseUrl || '' };
-  } catch (err) {
-    // Fallback to stale cache if available
-    if (cached && Array.isArray(cached.templates)) {
-      return { templates: cached.templates, baseUrl: cached.baseUrl || '' };
-    }
-
-    // No cache, no network — return empty
-    return { templates: [], baseUrl: '' };
+  // Fetch from remote with fallback
+  const urls = [url];
+  if (url !== FALLBACK_REGISTRY_URL) {
+    urls.push(FALLBACK_REGISTRY_URL);
   }
+
+  for (const fetchUrl of urls) {
+    try {
+      const response = await fetch(fetchUrl, {
+        headers: { 'Accept': 'application/json' },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Registry fetch failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (!data || !Array.isArray(data.templates)) {
+        throw new Error('Invalid registry format');
+      }
+
+      writeCache(data);
+      return { templates: data.templates, baseUrl: data.baseUrl || '' };
+    } catch {
+      // Try next URL
+    }
+  }
+
+  // All URLs failed — fallback to stale cache if available
+  if (cached && Array.isArray(cached.templates)) {
+    return { templates: cached.templates, baseUrl: cached.baseUrl || '' };
+  }
+
+  // No cache, no network — return empty
+  return { templates: [], baseUrl: '' };
 }
 
 /**
@@ -167,13 +185,31 @@ export async function fetchTemplateFile(baseUrl, registryDir, filePath) {
     return fs.readFileSync(localPath, 'utf-8');
   }
 
-  const response = await fetch(fullPath, {
-    signal: AbortSignal.timeout(15000),
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to fetch ${filePath}: ${response.status}`);
+  // Build deduplicated list: CDN mirrors first, then the provided baseUrl
+  const suffix = `/${registryDir}/${filePath}`;
+  const urls = [];
+  const seen = new Set();
+
+  for (const cdn of CDN_BASE_URLS) {
+    const url = cdn + suffix;
+    if (!seen.has(url)) { seen.add(url); urls.push(url); }
   }
-  return response.text();
+  if (!seen.has(fullPath)) { urls.push(fullPath); }
+
+  let lastError;
+  for (const url of urls) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ${filePath}: ${response.status}`);
+      }
+      return await response.text();
+    } catch (err) {
+      lastError = err;
+    }
+  }
+
+  throw lastError;
 }
 
 /**

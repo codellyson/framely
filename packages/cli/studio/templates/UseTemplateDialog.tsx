@@ -67,6 +67,11 @@ export function UseTemplateDialog({
     setInstallLog([]);
     setError(null);
 
+    // Update URL so after reload the correct template is selected
+    const url = new URL(window.location.href);
+    url.searchParams.set('composition', template.id);
+    window.history.replaceState({}, '', url);
+
     try {
       await templatesApi.installTemplate(template.id, (event) => {
         if (event.type === 'log') {
@@ -75,7 +80,9 @@ export function UseTemplateDialog({
           setInstallLog((prev) => [...prev, event.message + '\n']);
         }
       });
-      setInstallDone(true);
+      // Install succeeded — reload to pick up the new virtual module
+      window.location.reload();
+      return;
     } catch (err) {
       setError(err.message || 'Installation failed');
     } finally {

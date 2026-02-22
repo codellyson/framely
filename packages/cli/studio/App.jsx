@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { TimelineProvider, getCompositions } from '@codellyson/framely';
 import { CompositionsView } from './CompositionsView';
-import { getTemplateComponent } from 'virtual:framely-templates';
+import { getTemplateComponent, getInstalledTemplateEntries } from 'virtual:framely-templates';
 import './styles/design-system.css';
 import './App.css';
 
@@ -61,7 +61,27 @@ function App() {
     return {};
   }, []);
 
-  const [templateCompositions, setTemplateCompositions] = useState({});
+  // Auto-register installed templates as compositions on mount
+  const [templateCompositions, setTemplateCompositions] = useState(() => {
+    const entries = getInstalledTemplateEntries();
+    const comps = {};
+    for (const { id, component, meta } of entries) {
+      comps[id] = {
+        id,
+        component,
+        width: meta.width || 1920,
+        height: meta.height || 1080,
+        fps: meta.fps || 30,
+        durationInFrames: meta.durationInFrames || 150,
+        defaultProps: meta.defaultProps || {},
+        folderPath: ['Templates'],
+        _isTemplate: true,
+        _templateId: id,
+        _templateName: meta.name,
+      };
+    }
+    return comps;
+  });
 
   // Load all code-defined compositions
   const codeCompositions = useMemo(() => {
@@ -73,12 +93,12 @@ function App() {
     return obj;
   }, []);
 
-  // Lazy initializer: resolve from URL param or first registered composition
+  // Lazy initializer: URL param > first code composition
   const [selectedCompositionId, setSelectedCompositionId] = useState(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const fromUrl = searchParams.get('composition');
     if (fromUrl) return fromUrl;
-    // getCompositions() is synchronous — registerRoot runs before App mounts
+    // Fallback to first code composition
     const map = getCompositions();
     if (map.size > 0) return map.keys().next().value;
     return null;

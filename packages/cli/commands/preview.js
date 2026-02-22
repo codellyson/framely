@@ -735,7 +735,8 @@ function framelyStudioPlugin(userEntryPath, studioDir, templateState) {
           const mod = server.moduleGraph.getModuleById(RESOLVED_VIRTUAL_TEMPLATES_ID);
           if (mod) {
             server.moduleGraph.invalidateModule(mod);
-            server.ws.send({ type: 'full-reload' });
+            // Don't trigger full-reload from server — the client handles
+            // the reload after the install/remove stream completes.
           }
         };
       }

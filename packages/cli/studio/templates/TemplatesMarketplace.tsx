@@ -80,6 +80,17 @@ export function TemplatesMarketplace({ onUseTemplate }: TemplatesMarketplaceProp
     [selectedTemplate, onUseTemplate]
   );
 
+  // Remove installed template (confirmation is handled by TemplatePreviewDialog)
+  const handleRemoveTemplate = useCallback(async (template: Template) => {
+    try {
+      await templatesApi.removeTemplate(template.id);
+      // Reload to pick up the updated virtual module
+      window.location.reload();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to remove template');
+    }
+  }, []);
+
   // Load more templates
   const handleLoadMore = useCallback(() => {
     setFilters((prev) => ({ ...prev, page: (prev.page || 1) + 1 }));
@@ -156,6 +167,7 @@ export function TemplatesMarketplace({ onUseTemplate }: TemplatesMarketplaceProp
         template={selectedTemplate}
         onClose={() => setPreviewOpen(false)}
         onUseTemplate={handleUseFromPreview}
+        onRemoveTemplate={handleRemoveTemplate}
       />
 
       {/* Use Template Dialog */}

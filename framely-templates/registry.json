@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "baseUrl": "https://raw.githubusercontent.com/codellyson/framely/refs/heads/main/framely-templates/templates",
+  "baseUrl": "https://cdn.jsdelivr.net/gh/codellyson/framely@main/framely-templates/templates",
   "templates": [
     {
       "id": "social-intro-1",

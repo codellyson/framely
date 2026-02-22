@@ -138,28 +138,37 @@ export function generateVirtualModule(installed) {
     return `
 export const installedTemplates = {};
 export function getTemplateComponent(id) { return null; }
+export function getInstalledTemplateEntries() { return []; }
 `;
   }
 
   const imports = [];
-  const entries = [];
+  const componentEntries = [];
+  const metaEntries = [];
 
   installed.forEach((inst, i) => {
     const absPath = inst.componentEntry.replace(/\\/g, '/');
     const id = inst.meta.id;
     imports.push(`import Comp${i} from '${absPath}';`);
-    entries.push(`  '${id}': Comp${i}`);
+    componentEntries.push(`  '${id}': Comp${i}`);
+    metaEntries.push(`  { id: ${JSON.stringify(id)}, component: Comp${i}, meta: ${JSON.stringify(inst.meta)} }`);
   });
 
   return `
 ${imports.join('\n')}
 
 export const installedTemplates = {
-${entries.join(',\n')}
+${componentEntries.join(',\n')}
 };
 
 export function getTemplateComponent(id) {
   return installedTemplates[id] || null;
+}
+
+export function getInstalledTemplateEntries() {
+  return [
+${metaEntries.join(',\n')}
+  ];
 }
 `;
 }

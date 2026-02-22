@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Template } from '@codellyson/framely';
 import { CATEGORY_LABELS } from '@codellyson/framely';
 
@@ -7,6 +7,7 @@ export interface TemplatePreviewDialogProps {
   template: Template | null;
   onClose: () => void;
   onUseTemplate: () => void;
+  onRemoveTemplate?: (template: Template) => void;
 }
 
 /**
@@ -17,8 +18,15 @@ export function TemplatePreviewDialog({
   template,
   onClose,
   onUseTemplate,
+  onRemoveTemplate,
 }: TemplatePreviewDialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
+
+  // Reset confirmation state when dialog opens/closes or template changes
+  useEffect(() => {
+    setConfirmingRemove(false);
+  }, [open, template]);
 
   // Escape key handler
   useEffect(() => {
@@ -177,16 +185,55 @@ export function TemplatePreviewDialog({
 
         {/* Footer */}
         <div className="template-preview-footer">
-          <button type="button" onClick={onClose} className="template-btn-secondary">
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={onUseTemplate}
-            className="template-btn-primary"
-          >
-            {template.installed ? 'Use Template' : 'Add to Project'}
-          </button>
+          {confirmingRemove ? (
+            <>
+              <span style={{ color: '#ef4444', fontSize: '0.9em' }}>
+                Remove "{template.name}" from your project?
+              </span>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => setConfirmingRemove(false)}
+                  className="template-btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onRemoveTemplate?.(template)}
+                  className="template-btn-secondary"
+                  style={{ background: '#ef4444', color: '#fff', borderColor: '#ef4444' }}
+                >
+                  Remove
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <button type="button" onClick={onClose} className="template-btn-secondary">
+                Cancel
+              </button>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {template.installed && onRemoveTemplate && (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmingRemove(true)}
+                    className="template-btn-secondary"
+                    style={{ color: '#ef4444' }}
+                  >
+                    Remove
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={onUseTemplate}
+                  className="template-btn-primary"
+                >
+                  {template.installed ? 'Use Template' : 'Add to Project'}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
