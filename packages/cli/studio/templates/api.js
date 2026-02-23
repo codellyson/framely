@@ -49,7 +49,7 @@ export const templatesApi = {
     }
 
     const reader = response.body.getReader();
-    const decoder = new TextDecoder();
+    const decoder = new globalThis.TextDecoder();
     let buffer = '';
 
     while (true) {
@@ -90,7 +90,7 @@ export const templatesApi = {
     }
 
     const reader = response.body.getReader();
-    const decoder = new TextDecoder();
+    const decoder = new globalThis.TextDecoder();
     let buffer = '';
 
     while (true) {

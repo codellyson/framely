@@ -84,12 +84,14 @@ export function TemplatesMarketplace({ onUseTemplate }: TemplatesMarketplaceProp
   const handleRemoveTemplate = useCallback(async (template: Template) => {
     try {
       await templatesApi.removeTemplate(template.id);
-      // Reload to pick up the updated virtual module
-      window.location.reload();
+      setPreviewOpen(false);
+      setSelectedTemplate(null);
+      // Refresh list to update installed status — HMR reload will handle the rest
+      fetchTemplates(true);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to remove template');
+      window.alert(err instanceof Error ? err.message : 'Failed to remove template');
     }
-  }, []);
+  }, [fetchTemplates]);
 
   // Load more templates
   const handleLoadMore = useCallback(() => {
