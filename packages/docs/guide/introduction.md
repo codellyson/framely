@@ -28,36 +28,6 @@ function MyVideo() {
 
 The renderer captures each frame as an image and stitches them together into a video using FFmpeg.
 
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Studio UI (React + Vite)                  │
-│                                                             │
-│  ┌─────────┐  ┌──────────────────────┐  ┌──────────────┐   │
-│  │ Comps   │  │  Player viewport     │  │ Props editor │   │
-│  │ sidebar │  │  (live preview)      │  │ (edit props) │   │
-│  │         │  ├──────────────────────┤  │              │   │
-│  │         │  │  Timeline            │  │              │   │
-│  │         │  │  (sequences, seek)   │  │              │   │
-│  └─────────┘  └──────────────────────┘  └──────────────┘   │
-│                                                             │
-│  [Render] → POST /api/render → CLI render pipeline          │
-└─────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────┐
-│                    CLI (@codellyson/framely-cli)              │
-│                                                             │
-│  Playwright (headless Chromium)                             │
-│       │  screenshots each frame as JPEG                     │
-│       ▼                                                     │
-│  FFmpeg (JPEG → H.264/H.265/VP9/ProRes/GIF)               │
-│       │                                                     │
-│       ▼                                                     │
-│  output.mp4                                                 │
-└─────────────────────────────────────────────────────────────┘
-```
-
 ## How Rendering Works
 
 1. The Vite dev server serves React compositions

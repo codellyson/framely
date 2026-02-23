@@ -1,0 +1,745 @@
+# Framely
+
+> Programmatic video creation with React. Define videos as React components, preview in a visual studio, render to MP4/WebM/GIF/ProRes.
+
+- Version: 0.1.4
+- Repository: https://github.com/codellyson/framely
+- License: MIT
+- Node.js: >= 18.0.0
+
+## Monorepo Structure
+
+```
+framely/
+  packages/
+    framely/            # @codellyson/framely — Core React library (TypeScript)
+    cli/                # @codellyson/framely-cli — CLI + Studio UI (Node.js ESM)
+    create-framely/     # @codellyson/create-framely — Project scaffolder
+    docs/               # @codellyson/framely-docs — Documentation site
+  framely-templates/    # Template registry + template source files
+  src/                  # Sample compositions (monorepo-level)
+```
+
+Workspace: pnpm (`pnpm-workspace.yaml` targets `packages/*`). All packages use `"type": "module"`.
+
+---
+
+## @codellyson/framely — Core Library
+
+### Entry: `packages/framely/src/index.ts`
+
+Peer dependencies: `react@^18`, `react-dom@^18`
+
+### TimelineProvider & Context
+
+The root provider that holds frame state, playback controls, and composition metadata.
+
+```tsx
+<TimelineProvider
+  fps={30}              // default: 30
+  width={1920}          // default: 1920
+  height={1080}         // default: 1080
+  durationInFrames={300} // default: 300
+  renderMode={false}    // true = Playwright render mode
+  initialFrame={0}
+  onFrameChange={(frame) => {}}
+>
+  {children}
+</TimelineProvider>
+```
+
+TimelineContextValue: `{ frame, fps, width, height, durationInFrames, playing, renderMode, setFrame, play, pause, toggle }`
+
+In render mode, exposes: `window.__setFrame(n)`, `window.__ready`, `window.__renderedFrame`, `window.__compositionWidth/Height/Fps/DurationInFrames`.
+
+### Hooks
+
+```tsx
+const frame = useCurrentFrame();        // Current frame (0-based integer)
+const { fps, width, height, durationInFrames } = useVideoConfig();
+const { playing, renderMode } = useTimeline();
+```
+
+### interpolate(value, inputRange, outputRange, options?)
+
+Maps a value from one range to another. The primary animation utility.
+
+```tsx
+const opacity = interpolate(frame, [0, 30], [0, 1]);
+const x = interpolate(frame, [0, 60], [-200, 200], {
+  easing: Easing.easeOutCubic,
+  extrapolateLeft: 'clamp',   // 'extend' | 'clamp' | 'wrap' | 'identity'
+  extrapolateRight: 'clamp',
+});
+```
+
+Ranges must have >= 2 elements. inputRange must be monotonically increasing.
+
+### spring(frame, options?)
+
+Physics-based spring animation returning a value from `from` to `to`.
+
+```tsx
+const scale = spring(frame, {
+  from: 0, to: 1,       // default: 0 → 1
+  fps: 30,               // default: 30
+  delay: 10,             // frames to wait before starting
+  mass: 1, stiffness: 100, damping: 10,
+  overshootClamping: false,
+});
+```
+
+### Easing
+
+All easing functions: `(t: number) => number` where t is 0–1.
+
+Families: `linear`, `ease`, `easeIn/Out/InOut`, `easeInCubic/OutCubic/InOutCubic`, `easeInQuart/OutQuart/InOutQuart`, `easeInQuint/OutQuint/InOutQuint`, `easeInSine/OutSine/InOutSine`, `easeInExpo/OutExpo/InOutExpo`, `easeInCirc/OutCirc/InOutCirc`, `easeInBack/OutBack/InOutBack`, `easeInElastic/OutElastic/InOutElastic`, `easeInBounce/OutBounce/InOutBounce`, `bounce`, `spring`, `step0`, `step1`.
+
+Factories: `poly(n)`, `back(overshoot)`, `elastic(bounciness)`, `bezier(x1, y1, x2, y2)`.
+
+Modifiers: `in(fn)`, `out(fn)`, `inOut(fn)`.
+
+### interpolateColors(value, inputRange, colors, options?)
+
+```tsx
+const color = interpolateColors(frame, [0, 30], ['#ff0000', '#0000ff'], {
+  colorSpace: 'oklch',  // 'rgb' (default) or 'oklch'
+  easing: Easing.easeOut,
+});
+```
+
+Supports: hex, rgb/rgba, hsl/hsla, oklch, named colors.
+
+### Layout Components
+
+**Sequence** — Offsets timeline for children. Children see frame 0 when parent reaches `from`.
+
+```tsx
+<Sequence from={0} durationInFrames={90} name="Intro" layout="absolute-fill">
+  <IntroScene />   {/* Sees frames 0-89 */}
+</Sequence>
+<Sequence from={90} durationInFrames={90}>
+  <MainScene />    {/* Also sees frames 0-89 (offset!) */}
+</Sequence>
+```
+
+**Series** — Sequential sequences with auto-calculated `from`.
+
+```tsx
+<Series>
+  <Series.Sequence durationInFrames={60}><Scene1 /></Series.Sequence>
+  <Series.Sequence durationInFrames={90} offset={-10}><Scene2 /></Series.Sequence>
+</Series>
+```
+
+`offset`: positive = gap, negative = overlap with previous sequence.
+
+**Loop** — Repeats children. Frame counter resets each iteration.
+
+```tsx
+<Loop durationInFrames={30} times={3}><PulseAnimation /></Loop>
+const { iteration, durationInFrames } = useLoop();
+```
+
+**Freeze** — Pins children at a specific frame.
+
+```tsx
+<Freeze frame={15}><MyAnimation /></Freeze>
+<Freeze frame={30} active={shouldFreeze}><MyAnimation /></Freeze>
+```
+
+**AbsoluteFill** — `position: absolute; inset: 0` div for layering.
+
+```tsx
+<AbsoluteFill style={{ background: '#000' }}>
+  <AbsoluteFill style={{ opacity: 0.5 }}><Background /></AbsoluteFill>
+  <AbsoluteFill><Foreground /></AbsoluteFill>
+</AbsoluteFill>
+```
+
+**Folder** — Organizes compositions in Studio sidebar. No rendering effect.
+
+```tsx
+<Folder name="Marketing">
+  <Composition id="promo" ... />
+</Folder>
+```
+
+### Composition & Registration
+
+```tsx
+// src/index.jsx — App entry
+import { registerRoot } from '@codellyson/framely';
+import { Root } from './Root';
+registerRoot(Root);
+
+// src/Root.jsx — Composition declarations
+import { Composition } from '@codellyson/framely';
+export function Root() {
+  return (
+    <Composition
+      id="my-video"
+      component={MyVideo}
+      width={1920}
+      height={1080}
+      fps={30}
+      durationInFrames={150}
+      defaultProps={{ title: 'Hello' }}
+    />
+  );
+}
+```
+
+CompositionProps: `id`, `component` or `lazyComponent`, `width`, `height`, `fps`, `durationInFrames`, `defaultProps`, `calculateMetadata`, `schema`, `defaultCodec`.
+
+Registry API: `getCompositions()` → `Map<string, CompositionConfig>`, `getComposition(id)`, `getCompositionTree()`, `isRootRegistered()`, `onRootRegistered(cb)`, `clearRegistry()`.
+
+Also: `defineComposition(config)` for non-JSX composition definition.
+
+### Dynamic Metadata
+
+```tsx
+<Composition
+  id="data-driven"
+  component={DataVideo}
+  calculateMetadata={async ({ props }) => {
+    const data = await fetch('/api').then(r => r.json());
+    return { durationInFrames: data.length * 30, props: { ...props, data } };
+  }}
+/>
+```
+
+### Delay Render
+
+Ensures async resources load before frame capture during rendering.
+
+```tsx
+// Hook API (preferred):
+const { continueRender } = useDelayRender('Loading data');
+useEffect(() => {
+  fetchData().then(() => continueRender());
+}, [continueRender]);
+
+// Condition-based:
+useDelayRenderWhile(isLoading, 'Loading');
+
+// Low-level:
+const handle = delayRender('Loading image', { timeoutInMilliseconds: 30000 });
+fetch(url).then(() => continueRender(handle)).catch(err => cancelRender(err));
+```
+
+Also: `isDelayRenderPending()`, `getPendingDelayRenders()`, `clearAllDelayRenders()`.
+
+### TransitionSeries
+
+Animated transitions between sequences.
+
+```tsx
+<TransitionSeries>
+  <TransitionSeries.Sequence durationInFrames={60}><SceneA /></TransitionSeries.Sequence>
+  <TransitionSeries.Transition presentation={fade()} timing={{ durationInFrames: 30 }} />
+  <TransitionSeries.Sequence durationInFrames={60}><SceneB /></TransitionSeries.Sequence>
+</TransitionSeries>
+```
+
+Inside a sequence: `const { entering, exiting, progress } = useTransition();`
+
+**Transition presets:**
+- Fade: `fade()`, `crossfade()`
+- Slide: `slide()`, `slideFromLeft()`, `slideFromRight()`, `slideFromTop()`, `slideFromBottom()`, `push()`
+- Wipe: `wipe()`, `wipeLeft()`, `wipeRight()`, `wipeTop()`, `wipeBottom()`, `iris()`, `diagonalWipe()`
+- Zoom: `zoom()`, `zoomInOut()`, `zoomOutIn()`, `kenBurns()`, `zoomRotate()`
+- Flip: `flip()`, `flipHorizontal()`, `flipVertical()`, `cardFlip()`, `cube()`, `door()`
+
+### Spring Utilities
+
+```tsx
+measureSpring({ fps, mass, stiffness, damping, threshold }) // → number of frames to settle
+
+springPresets.snappy   // { mass: 1, stiffness: 400, damping: 30 }
+springPresets.gentle   // { mass: 1, stiffness: 100, damping: 15 }
+springPresets.bouncy   // { mass: 1, stiffness: 200, damping: 10 }
+springPresets.stiff    // { mass: 1, stiffness: 300, damping: 25 }
+springPresets.slow     // { mass: 2, stiffness: 100, damping: 20 }
+springPresets.default  // { mass: 1, stiffness: 100, damping: 10 }
+
+const val = useSpring(target, { stiffness: 200, damping: 15 });
+const [x, y, r] = useSpringSequence([200, 100, 45], { stiffness: 150, damping: 12 });
+
+springNaturalFrequency(stiffness, mass)    // radians/second
+springDampingRatio(damping, stiffness, mass)
+```
+
+### Noise & Random
+
+All deterministic (seed-based) for reproducible animations.
+
+```tsx
+random(seed)                    // 0-1
+randomRange(seed, min, max)     // float in [min, max)
+randomInt(seed, min, max)       // int in [min, max]
+noise2D(x, y, { seed, frequency, amplitude })
+noise3D(x, y, z, { seed, frequency, amplitude })  // z=frame*speed for animation
+fbm2D(x, y, { seed, octaves, frequency, amplitude, lacunarity, persistence })
+```
+
+### Transform Utilities
+
+```tsx
+const t = makeTransform([
+  { translateX: 100 }, { rotate: 45 }, { scale: 1.5 },
+]);
+// → "translateX(100px) rotate(45deg) scale(1.5)"
+
+const t = transform().translateX(100).rotate(45).scale(1.5).toString();
+
+interpolateTransform(progress, fromOps, toOps);
+```
+
+Supported: translateX/Y/Z, translate, translate3d, scaleX/Y/Z, scale, scale3d, rotate, rotateX/Y/Z, rotate3d, skewX/Y, skew, perspective, matrix, matrix3d.
+
+### Media Components
+
+```tsx
+<Img src={staticFile('hero.png')} />
+<Video src={staticFile('intro.mp4')} volume={0.5} startFrom={30} endAt={120} muted={false} />
+<Audio src={staticFile('bg.mp3')} volume={(f) => interpolate(f, [0, 30], [0, 1])} />
+<IFrame src="https://example.com" />
+```
+
+Audio metadata: `getAudioMetadata(src)`, `getAudioDurationInFrames(src, fps)`.
+
+### SVG Shapes
+
+```tsx
+<Svg width={100} height={100} viewBox="0 0 100 100">
+  <Circle cx={50} cy={50} r={40} fill="#6366f1" />
+  <Rect x={10} y={10} width={80} height={80} rx={8} />
+  <Ellipse cx={50} cy={50} rx={40} ry={20} />
+  <Line x1={0} y1={0} x2={100} y2={100} stroke="#000" />
+  <Path d="M 0 0 L 100 100" />
+  <Polygon points={[[0,0], [100,0], [50,100]]} />
+</Svg>
+const pathLength = usePathLength(svgPathRef);
+```
+
+### Text Component
+
+```tsx
+<Text fontSize={80} fontWeight="bold" color="#fff" textAlign="center">Hello World</Text>
+```
+
+Helpers: `splitText(text)` → `CharData[]`, `getWords(text)` → `WordData[]`.
+
+### Static Files & Preloading
+
+```tsx
+staticFile('images/hero.png')    // Resolves to public/ path
+isStaticFile(url)                // Is it a local asset?
+getFileExtension(path)           // e.g., 'mp4'
+getMimeType(path)                // e.g., 'video/mp4'
+
+preloadImage(src)
+preloadVideo(src)
+preloadAudio(src)
+preloadFont(src, options?)
+prefetch(src, options?)
+preloadAll([src1, src2])         // Parallel preload
+resolveWhenLoaded(element)       // Promise resolves when media loaded
+```
+
+### Input Props
+
+```tsx
+const props = getInputProps<{ title: string }>();
+setInputProps({ title: 'Hello' });
+mergeInputProps({ extra: 'data' });
+getInputProp('title', 'default');
+hasInputProps();
+createUrlWithProps('http://localhost:3000', { title: 'Hello' });
+```
+
+From CLI: `framely render my-video --props '{"title":"Hello"}'` or `--props-file data.json`.
+
+### Player & Thumbnail
+
+Embeddable components for any React app.
+
+```tsx
+<Player
+  component={MyVideo}
+  durationInFrames={300} fps={30} width={1920} height={1080}
+  inputProps={{ title: 'Hello' }}
+  autoPlay={false} loop={false} controls={true}
+  onFrameChange={(f) => {}} onPlay={() => {}} onPause={() => {}} onEnded={() => {}}
+/>
+
+<Thumbnail component={MyVideo} frame={30} fps={30} width={1920} height={1080} />
+```
+
+Player keyboard shortcuts: Space/k = play/pause, arrows = prev/next frame, Shift+arrows = +-10 frames, Home/End = start/end, f = fullscreen, m = mute.
+
+### Configuration
+
+```tsx
+Config.setCodec('h264');      // 'h264' | 'h265' | 'vp8' | 'vp9' | 'prores' | 'gif'
+Config.setCrf(18);
+Config.setScale(1);
+Config.setConcurrency(4);
+Config.setOutputLocation('./outputs');
+Config.setImageFormat('png'); // 'png' | 'jpeg'
+Config.setBrowserExecutable('/path/to/chrome');
+Config.setStudioPort(3000);
+Config.setRendererPort(4001);
+Config.setLevel('info');      // 'error' | 'warn' | 'info' | 'verbose'
+Config.setAll({ codec: 'h264', crf: 18 });
+
+getConfig()           // Full FramelyConfig object
+getConfigValue(key)
+resetConfig()
+loadConfig(partial)
+getFfmpegArgs(overrides?)
+getOutputExtension()  // e.g., '.mp4'
+validateConfig()      // → { valid, errors }
+```
+
+---
+
+## @codellyson/framely-cli — CLI Tool
+
+### Entry: `packages/cli/index.js`
+
+Binary: `framely`
+
+Dependencies: playwright, ffmpeg (system), vite, commander, chalk, ora.
+
+### Commands
+
+#### `framely render <composition-id> [output]`
+
+Renders a composition to video file.
+
+```bash
+framely render my-video out.mp4
+  --codec <codec>        h264 | h265 | vp8 | vp9 | prores | gif
+  --crf <n>              Quality 0-51 (default: 18)
+  --fps <n>              Override FPS
+  --width <n>            Override width
+  --height <n>           Override height
+  --frames <range>       e.g., "0-100"
+  --props <json>         Input props JSON string
+  --props-file <path>    Input props JSON file
+  --concurrency <n>      Parallel browser instances (default: 2)
+  --output-dir <path>    Output directory (default: ./outputs)
+  --sequence             Output as image sequence
+  --image-format <f>     png | jpeg (default: png)
+  --scale <n>            Resolution scale (default: 1)
+  --muted                Disable audio
+  --log-level <level>    error | warn | info | verbose
+```
+
+#### `framely still <composition-id> [output]`
+
+Captures a single frame as an image.
+
+```bash
+framely still my-video frame.png
+  --frame <n>     Frame to capture (default: 0)
+  --format <f>    png | jpeg (default: png)
+  --quality <n>   JPEG quality 0-100 (default: 80)
+  --scale <n>     Scale factor (default: 1)
+  --props <json>  Input props JSON
+```
+
+#### `framely preview`
+
+Starts the development Studio server.
+
+```bash
+framely preview
+  --port <n>     Port (default: 3000); render API on port+1
+  --no-open      Don't auto-open browser
+```
+
+#### `framely compositions`
+
+Lists all registered compositions.
+
+```bash
+framely compositions [--json] [--frontend-url <url>]
+```
+
+#### `framely templates list|add|remove`
+
+```bash
+framely templates list                  # List registry templates
+framely templates add <template-id>     # Install to src/templates/<id>/
+framely templates remove <template-id>  # Remove from src/templates/<id>/
+```
+
+### Render Pipeline
+
+```
+Playwright browser → navigate to ?renderMode=true&composition=id
+  → wait for window.__ready === true
+  → for each frame:
+      window.__setFrame(n)  (flushSync — DOM updates synchronously)
+      wait for delayRender pending count === 0
+      screenshot #render-container as JPEG
+      pipe to FFmpeg stdin
+  → FFmpeg encodes to selected codec
+  → Audio mixing pass (if audio tracks present)
+```
+
+Parallel rendering (--concurrency N): divides frames into N chunks across separate browser instances, then FFmpeg stitches into final video.
+
+GIF: 2-pass encoding with palettegen + paletteuse.
+
+### Supported Codecs
+
+| Codec | Output | Encoder | Notes |
+|-------|--------|---------|-------|
+| h264 | .mp4 | libx264 | Default, widely compatible |
+| h265 | .mp4 | libx265 | Better compression |
+| vp8 | .webm | libvpx | Web format |
+| vp9 | .webm | libvpx-vp9 | Better than VP8 |
+| prores | .mov | prores_ks | Alpha support |
+| gif | .gif | 2-pass | Limited colors, no audio |
+
+### Render API (port = studio port + 1)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | /api/render | Render video (streams NDJSON progress) |
+| POST | /api/still | Render still frame |
+| GET | /api/templates | List templates (query: category, search, sortBy, page, pageSize) |
+| GET | /api/templates/:id | Get single template |
+| GET | /api/templates/categories | Category counts |
+| POST | /api/templates/install | Install template (streams NDJSON) |
+| POST | /api/templates/remove | Remove template (streams NDJSON) |
+| GET | /api/assets | List public/ directory |
+| GET | /outputs/* | Download rendered files |
+
+NDJSON event types: `start`, `status`, `progress`, `log`, `complete`, `error`.
+
+### Studio UI
+
+React app served by Vite dev server (`packages/cli/studio/`).
+
+Routing:
+- `?renderMode=true&composition=id` → bare RenderView with `#render-container`
+- Otherwise → full Studio editor (sidebar + player + props editor + marketplace)
+
+Virtual Vite modules:
+- `virtual:framely-entry` — imports user's entry + mounts Studio App
+- `virtual:framely-templates` — exports `getTemplateComponent()`, `getInstalledTemplateEntries()`
+
+Key files:
+- `studio/App.jsx` — root: render mode routing + studio shell
+- `studio/CompositionsView.jsx` — sidebar + player + info panel
+- `studio/PropsEditor.tsx` — schema-driven prop editor
+- `studio/RenderDialog.tsx` — render configuration modal
+- `studio/player/Player.jsx` — video preview player
+- `studio/templates/` — marketplace UI (TemplatesMarketplace, TemplateCard, TemplatePreviewDialog, UseTemplateDialog, api.js)
+
+---
+
+## @codellyson/create-framely — Scaffolder
+
+### Usage
+
+```bash
+npx create-framely my-project
+npx create-framely .             # Current directory
+npx create-framely my-project --force
+```
+
+### Generated Project
+
+```
+my-project/
+  package.json
+  framely.config.js
+  public/
+  src/
+    index.jsx         # registerRoot(Root)
+    Root.jsx           # Composition declarations
+    compositions/
+      HelloWorld.jsx   # Example composition
+```
+
+---
+
+## Template System
+
+### Registry
+
+Primary: `https://cdn.jsdelivr.net/gh/codellyson/framely@main/framely-templates/registry.json`
+Fallback: `https://raw.githubusercontent.com/codellyson/framely/main/framely-templates/registry.json`
+Local cache: `~/.framely/registry-cache.json` (1 hour TTL)
+
+### registry.json Schema
+
+```json
+{
+  "version": 2,
+  "baseUrl": "https://cdn.jsdelivr.net/gh/codellyson/framely@main/framely-templates/templates",
+  "templates": [{
+    "id": "youtube-subscribe",
+    "name": "Subscribe Animation",
+    "description": "...",
+    "category": "social-media",
+    "tags": ["youtube", "subscribe"],
+    "preview": { "thumbnail": "https://..." },
+    "author": { "name": "Framely Team", "github": "codellyson", "verified": true },
+    "version": "1.0.0",
+    "width": 1920, "height": 1080, "fps": 30, "durationInFrames": 120,
+    "defaultProps": { "channelName": "Your Channel", "buttonColor": "#FF0000" },
+    "downloads": 2340, "rating": 4.9, "featured": true,
+    "registryDir": "framely-template-subscribe-animation",
+    "files": ["src/index.jsx", "framely-template.json"]
+  }]
+}
+```
+
+### Template Categories
+
+`social-media`, `marketing`, `presentation`, `intro-outro`, `lower-thirds`, `text-animations`, `backgrounds`
+
+### Available Templates
+
+| ID | Name | Category | Dimensions |
+|----|------|----------|------------|
+| social-intro-1 | Modern Social Intro | intro-outro | 1080x1920 |
+| youtube-subscribe | Subscribe Animation | social-media | 1920x1080 |
+| lower-third-1 | Clean Lower Third | lower-thirds | 1920x1080 |
+| text-reveal-1 | Kinetic Text Reveal | text-animations | 1920x1080 |
+| gradient-bg-1 | Animated Gradient | backgrounds | 1920x1080 |
+| promo-slide-1 | Product Showcase | marketing | 1080x1080 |
+| presentation-1 | Slide Transition Pack | presentation | 1920x1080 |
+| instagram-story | Story Template | social-media | 1080x1920 |
+
+### Template File Structure
+
+```
+framely-templates/templates/
+  framely-template-subscribe-animation/
+    src/index.jsx              # Composition component
+    framely-template.json      # Template metadata
+```
+
+### Local Template Discovery
+
+After `framely templates add <id>`, files are copied to `src/templates/<id>/`. The CLI's `discoverInstalledTemplates()` scans `src/templates/` for directories containing both `framely-template.json` and an `index.*` entry file.
+
+### framely-template.json
+
+```json
+{
+  "id": "template-id",
+  "name": "Template Name",
+  "description": "...",
+  "category": "social-media",
+  "tags": ["tag1"],
+  "width": 1920, "height": 1080, "fps": 30, "durationInFrames": 150,
+  "defaultProps": {},
+  "author": { "name": "...", "verified": true },
+  "preview": { "thumbnail": "https://..." }
+}
+```
+
+---
+
+## Configuration File
+
+`framely.config.js` at project root:
+
+```js
+export default {
+  // registry: { url: 'file:///path/to/local/registry.json' },
+};
+```
+
+The CLI reads the registry URL via regex: `registry\s*:\s*\{\s*url\s*:\s*['"]([^'"]+)['"]`
+
+---
+
+## Composition Authoring Pattern
+
+```tsx
+import {
+  useCurrentFrame, useVideoConfig, interpolate, spring,
+  AbsoluteFill, Sequence, Series, Easing
+} from '@codellyson/framely';
+
+export default function MyVideo({ title = 'Hello' }) {
+  const frame = useCurrentFrame();
+  const { fps, width, height, durationInFrames } = useVideoConfig();
+
+  const opacity = interpolate(frame, [0, 30], [0, 1], { extrapolateRight: 'clamp' });
+  const scale = spring(frame, { fps, from: 0, to: 1, delay: 10 });
+
+  return (
+    <AbsoluteFill style={{ background: '#1a1a2e' }}>
+      <Sequence from={0} durationInFrames={90}>
+        <h1 style={{ opacity, transform: `scale(${scale})` }}>{title}</h1>
+      </Sequence>
+      <Sequence from={90}>
+        <p>Second scene</p>
+      </Sequence>
+    </AbsoluteFill>
+  );
+}
+```
+
+## Async Data Pattern
+
+```tsx
+function DataVideo() {
+  const [data, setData] = useState(null);
+  const { continueRender } = useDelayRender('Loading data');
+
+  useEffect(() => {
+    fetchData().then(d => { setData(d); continueRender(); });
+  }, [continueRender]);
+
+  if (!data) return null;
+  return <AbsoluteFill>{data.title}</AbsoluteFill>;
+}
+```
+
+---
+
+## Key Source Files
+
+### Core Library (packages/framely/src/)
+- `index.ts` — barrel export
+- `context.tsx` — TimelineProvider, TimelineContext, useTimeline
+- `hooks.ts` — useCurrentFrame, useVideoConfig
+- `interpolate.ts` — interpolate(), spring()
+- `Easing.ts` — all easing functions
+- `interpolateColors.ts` — color interpolation (RGB/OKLCH)
+- `Sequence.tsx`, `Series.tsx`, `Loop.tsx`, `Freeze.tsx` — layout components
+- `Composition.tsx` — Composition, defineComposition
+- `registerRoot.ts` — registerRoot, getCompositions, registry
+- `delayRender.ts` — delay render system
+- `transitions/` — TransitionSeries + presets (fade, slide, wipe, zoom, flip)
+- `Player.tsx` — embeddable Player, Thumbnail
+- `config.ts` — Config setter API
+- `noise.ts` — deterministic random/noise utilities
+- `makeTransform.ts` — CSS transform builder
+- `templates/types.ts` — Template type definitions
+
+### CLI (packages/cli/)
+- `index.js` — CLI entry (commander)
+- `commands/render.js` — render command
+- `commands/still.js` — still command
+- `commands/preview.js` — preview server (Vite + render API)
+- `commands/compositions.js` — list compositions
+- `commands/templates.js` — template management
+- `utils/render.js` — FFmpeg frame-by-frame rendering
+- `utils/browser.js` — Playwright browser management
+- `utils/codecs.js` — codec configurations
+- `utils/registry.js` — template registry fetching + caching
+- `utils/discover.js` — local template discovery + virtual module generation
+- `studio/` — React Studio UI served by Vite

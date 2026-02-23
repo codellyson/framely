@@ -24,6 +24,7 @@ if (nodeVersion[0] < 18) {
 
 import { program } from 'commander';
 import { renderCommand } from './commands/render.js';
+import { batchCommand } from './commands/batch.js';
 import { stillCommand } from './commands/still.js';
 import { previewCommand } from './commands/preview.js';
 import { compositionsCommand } from './commands/compositions.js';
@@ -60,6 +61,28 @@ program
   .option('--allow-remote', 'Allow rendering from non-localhost URLs')
   .option('--log-level <level>', 'Log level (error, warn, info, verbose)', 'info')
   .action(renderCommand);
+
+// ─── Batch Command ───────────────────────────────────────────────────────────
+program
+  .command('batch <composition-id>')
+  .description('Render multiple videos from a data file (CSV or JSON)')
+  .requiredOption('--data <path>', 'Path to CSV or JSON data file')
+  .option('--output-pattern <pattern>', 'Output filename pattern using {field} placeholders')
+  .option('--codec <codec>', 'Video codec (h264, h265, vp8, vp9, prores, gif)', 'h264')
+  .option('--crf <number>', 'Constant Rate Factor (0-51, lower = better quality)', '18')
+  .option('--fps <number>', 'Frames per second')
+  .option('--width <number>', 'Video width in pixels')
+  .option('--height <number>', 'Video height in pixels')
+  .option('--concurrency <number>', 'Number of parallel video renders', '2')
+  .option('--output-dir <path>', 'Output directory', './outputs')
+  .option('--scale <number>', 'Scale factor for output dimensions', '1')
+  .option('--timeout <ms>', 'Timeout in ms for delayRender', '30000')
+  .option('--muted', 'Disable audio in output')
+  .option('--fail-fast', 'Stop on first error instead of continuing')
+  .option('--frontend-url <url>', 'Frontend URL for rendering', 'http://localhost:3000')
+  .option('--allow-remote', 'Allow rendering from non-localhost URLs')
+  .option('--log-level <level>', 'Log level (error, warn, info, verbose)', 'info')
+  .action(batchCommand);
 
 // ─── Still Command ────────────────────────────────────────────────────────────
 program

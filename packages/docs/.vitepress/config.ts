@@ -44,6 +44,12 @@ export default defineConfig({
             { text: 'Sequences', link: '/guide/sequences' },
           ],
         },
+        {
+          text: 'AI Agents',
+          items: [
+            { text: 'LLM.txt', link: '/guide/llm-txt' },
+          ],
+        }
       ],
       '/api/': [
         {
@@ -81,6 +87,8 @@ export default defineConfig({
             { text: 'Overview', link: '/cli/' },
             { text: 'framely preview', link: '/cli/preview' },
             { text: 'framely render', link: '/cli/render' },
+            { text: 'framely batch', link: '/cli/batch' },
+
           ],
         },
       ],
